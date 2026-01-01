@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/* ===== Glass House Design System ===== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core colors */
+  --background: #09090b; /* zinc-950 */
+  --foreground: #fafafa;
+  
+  /* Glass effects */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 40px;
+  
+  /* Brand colors */
+  --primary: #c084fc; /* purple-400 */
+  --primary-glow: rgba(192, 132, 252, 0.5);
+  --success: #34d399; /* emerald-400 */
+  --destructive: #fb7185; /* rose-400 */
 }
 
 @theme inline {
@@ -10,17 +23,188 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Glass House tokens */
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  --color-primary: var(--primary);
+  --color-primary-glow: var(--primary-glow);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ===== Base Styles ===== */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== Gradient Mesh Background ===== */
+.gradient-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.2;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, #a855f7 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, #ec4899 0%, transparent 50%),
+    radial-gradient(ellipse 70% 40% at 40% 80%, #3b82f6 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 90% 70%, #8b5cf6 0%, transparent 50%);
+}
+
+/* ===== Glass Card Styles ===== */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 32px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Ticket rip cutouts using clip-path */
+.ticket-rip {
+  --rip-size: 16px;
+  position: relative;
+}
+
+.ticket-rip::before,
+.ticket-rip::after {
+  content: '';
+  position: absolute;
+  width: var(--rip-size);
+  height: var(--rip-size);
+  background: var(--background);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ticket-rip::before {
+  left: calc(var(--rip-size) / -2);
+}
+
+.ticket-rip::after {
+  right: calc(var(--rip-size) / -2);
+}
+
+/* ===== 3D Card Flip ===== */
+.flip-card {
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+  position: absolute;
+  inset: 0;
+}
+
+/* ===== Bottom Navigation ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--glass-border);
+  z-index: 50;
+}
+
+.fab-button {
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  box-shadow:
+    0 0 20px var(--primary-glow),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+}
+
+.fab-button:active {
+  transform: translateY(-10px) scale(0.95);
+}
+
+/* ===== Swipe Button ===== */
+.swipe-track {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.swipe-handle {
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 20px var(--primary-glow);
+}
+
+/* ===== Animations ===== */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--primary-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--primary-glow);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ===== Typography Utilities ===== */
+.heading {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.mono {
+  font-family: var(--font-mono), monospace;
+}
+
+/* ===== Safe area for mobile ===== */
+.safe-bottom {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
