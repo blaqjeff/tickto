@@ -1,45 +1,36 @@
 'use client';
 
-import { PrivyProvider } from '@privy-io/react-auth';
+import dynamic from 'next/dynamic';
 import { ReactNode } from 'react';
+
+// Dynamically import PrivyProvider with SSR disabled to prevent HTML validation errors
+const PrivyClientProvider = dynamic(
+    () => import('./PrivyClientProvider').then((mod) => mod.PrivyClientProvider),
+    { ssr: false }
+);
 
 interface PrivyWrapperProps {
     children: ReactNode;
 }
 
 /**
- * PrivyWrapper - Full Privy authentication provider
- * Requires NEXT_PUBLIC_PRIVY_APP_ID in .env.local
+ * PrivyWrapper - Wrapper that loads Privy only on client-side
+ * This prevents Privy's styled-components from causing HTML nesting errors during SSR
  */
 export function PrivyWrapper({ children }: PrivyWrapperProps) {
     const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
-    // Fallback for missing app ID
+    // Fallback for missing app ID - just render children
     if (!appId) {
-        console.warn('NEXT_PUBLIC_PRIVY_APP_ID is not set. Running without authentication.');
         return <>{children}</>;
     }
 
     return (
-        <PrivyProvider
-            appId={appId}
-            config={{
-                appearance: {
-                    theme: 'dark',
-                    accentColor: '#a855f7', // purple-500
-                    showWalletLoginFirst: true,
-                    logo: undefined, // Add your logo URL here
-                },
-                embeddedWallets: {
-                    createOnLogin: 'users-without-wallets',
-                },
-                loginMethods: ['wallet', 'email', 'google'],
-            }}
-        >
+        <PrivyClientProvider appId={appId}>
             {children}
-        </PrivyProvider>
+        </PrivyClientProvider>
     );
 }
 
-// ===== Privy Hook Wrapper =====
+// Re-export Privy hook for use in components
 export { usePrivy as useAuth } from '@privy-io/react-auth';

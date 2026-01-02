@@ -12,6 +12,7 @@ export interface Event {
     description: string;
     organizer: string;
     featured?: boolean;
+    priceUsdc?: number; // USD price for the event
 }
 
 export type EventCategory =

@@ -182,18 +182,46 @@ export function getTicketsByOwner(address: string): Ticket[] {
     return mockTickets.filter((ticket) => ticket.owner === address);
 }
 
-export function formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-    });
+export function formatDate(dateString: string | null | undefined): string {
+    if (!dateString) return 'Date TBA';
+
+    // If it's already a short formatted date (like "Feb 14"), return as-is
+    if (!/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+        return dateString;
+    }
+
+    try {
+        const date = new Date(dateString);
+        // Check for Invalid Date
+        if (isNaN(date.getTime())) {
+            return dateString; // Return original if parsing fails
+        }
+        return date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+        });
+    } catch {
+        return dateString; // Return original on any error
+    }
 }
 
-export function formatTime(timeString: string): string {
+export function formatTime(timeString: string | null | undefined): string {
+    if (!timeString) return 'Time TBA';
+
+    // If it already contains AM/PM, return as-is
+    if (/[AP]M/i.test(timeString)) {
+        return timeString;
+    }
+
     const [hours, minutes] = timeString.split(':');
+    if (!hours || !minutes) return timeString;
+
     const hour = parseInt(hours, 10);
+    if (isNaN(hour)) return timeString;
+
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
 }
+

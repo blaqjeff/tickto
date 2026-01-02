@@ -1,67 +1,209 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Users, Check } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Check, Loader2, Plus, Minus, Ticket } from 'lucide-react';
+import { usePrivy } from '@privy-io/react-auth';
 import { SwipeButton } from '@/components/ui/SwipeButton';
 import { ConfettiEffect } from '@/components/ui/ConfettiEffect';
-import { getEventById, formatDate, formatTime } from '@/lib/mock-data';
-import { useTicketStore, createTicketFromPurchase } from '@/lib/ticket-store';
-import { TicketTier, TransactionState } from '@/lib/types';
+import { formatDate, formatTime } from '@/lib/mock-data';
+import { getEventById, buyTicket } from '@/lib/api';
+import { Event, TransactionState } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 interface EventPageProps {
     params: Promise<{ id: string }>;
 }
 
+// Tier options
+interface TierOption {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+}
+
+/**
+ * Format price for display - always USD
+ */
+function formatPrice(price: number | undefined | null): string {
+    if (price === undefined || price === null || price === 0) {
+        return 'Free';
+    }
+    return `$${price.toFixed(0)}`;
+}
+
 export default function EventPage({ params }: EventPageProps) {
     const { id } = use(params);
-    const event = getEventById(id);
-    const [selectedTier, setSelectedTier] = useState<TicketTier | null>(null);
+    const router = useRouter();
+    const { ready, authenticated, user, login } = usePrivy();
+
+    const [event, setEvent] = useState<Event | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedTier, setSelectedTier] = useState<TierOption | null>(null);
+    const [quantity, setQuantity] = useState(1);
     const [txState, setTxState] = useState<TransactionState>('idle');
     const [showConfetti, setShowConfetti] = useState(false);
+    const [purchasing, setPurchasing] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const addTicket = useTicketStore((state) => state.addTicket);
+    // Fetch event from Supabase
+    useEffect(() => {
+        async function loadEvent() {
+            setLoading(true);
+            const data = await getEventById(id);
+            setEvent(data);
 
-    if (!event) {
+            // Auto-select first tier if available
+            if (data) {
+                const tiers = getTiers(data);
+                if (tiers.length > 0) {
+                    setSelectedTier(tiers[0]);
+                }
+            }
+
+            setLoading(false);
+        }
+        if (id) {
+            loadEvent();
+        }
+    }, [id]);
+
+    // Build tier options from event data
+    function getTiers(eventData: Event): TierOption[] {
+        const basePrice = eventData.priceUsdc || 0;
+
+        // If event has tiers, use them
+        if (eventData.tiers && eventData.tiers.length > 0) {
+            return eventData.tiers.map(tier => ({
+                id: tier.id,
+                name: tier.name,
+                price: tier.price,
+                description: tier.perks?.join(', ') || ''
+            }));
+        }
+
+        // Otherwise create default tiers
+        return [
+            {
+                id: 'general',
+                name: 'General Admission',
+                price: basePrice,
+                description: 'Standard entry to the event'
+            },
+            {
+                id: 'vip',
+                name: 'VIP Experience',
+                price: basePrice * 2 || 100,
+                description: 'Premium seating, early entry, exclusive merch'
+            }
+        ];
+    }
+
+    // Calculate total price
+    const totalPrice = selectedTier ? selectedTier.price * quantity : 0;
+
+    // Quantity controls
+    const increaseQuantity = () => {
+        if (quantity < 5) setQuantity(q => q + 1);
+    };
+
+    const decreaseQuantity = () => {
+        if (quantity > 1) setQuantity(q => q - 1);
+    };
+
+    // Handle purchase
+    const handlePurchase = async () => {
+        if (!event || !selectedTier) return;
+        setErrorMessage(null);
+
+        // Check if user is authenticated
+        if (!authenticated || !user) {
+            login();
+            return;
+        }
+
+        setPurchasing(true);
+
+        try {
+            // Call the buyTicket API with quantity
+            const result = await buyTicket(
+                event.id,
+                user.id,
+                selectedTier.id,
+                selectedTier.name,
+                quantity,
+                selectedTier.price
+            );
+
+            if (result.success && result.tickets && result.tickets.length > 0) {
+                // Only show success after confirmed purchase
+                setShowConfetti(true);
+                setTxState('success');
+            } else {
+                setErrorMessage(result.error || 'Purchase failed. Please try again.');
+                setTxState('error');
+            }
+        } catch (err) {
+            console.error('Purchase error:', err);
+            setErrorMessage('An unexpected error occurred. Please try again.');
+            setTxState('error');
+        } finally {
+            setPurchasing(false);
+        }
+    };
+
+    // Get tiers for the event
+    const tiers = event ? getTiers(event) : [];
+
+    // Loading state
+    if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <p className="text-white/50">Event not found</p>
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                    <Loader2 className="w-8 h-8 text-purple-400" />
+                </motion.div>
+                <p className="text-white/50 mt-4">Loading event...</p>
             </div>
         );
     }
 
-    const handlePurchase = async () => {
-        if (!selectedTier) return;
-
-        // Create a new ticket and add it to the store
-        const newTicket = createTicketFromPurchase(
-            event.id,
-            event.title,
-            event.date,
-            event.time,
-            event.venue,
-            event.coverImage,
-            selectedTier.name,
-            selectedTier.id
+    // Not found state
+    if (!event) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                <div className="glass-card p-12 text-center max-w-md">
+                    <h2 className="heading text-2xl text-white mb-2">Event Not Found</h2>
+                    <p className="text-white/50 mb-6">
+                        The event you're looking for doesn't exist or has been removed.
+                    </p>
+                    <Link
+                        href="/"
+                        className="inline-block px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                    >
+                        Browse Events
+                    </Link>
+                </div>
+            </div>
         );
-
-        addTicket(newTicket);
-        setShowConfetti(true);
-        setTxState('success');
-    };
+    }
 
     return (
         <>
+            {/* Confetti Animation */}
             <ConfettiEffect isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
 
-            <div className="max-w-lg mx-auto">
+            <div className="max-w-lg mx-auto pb-8">
                 {/* Hero Image */}
                 <div className="relative h-72">
                     <Image
-                        src={event.coverImage}
+                        src={event.coverImage || '/placeholder-event.jpg'}
                         alt={event.title}
                         fill
                         className="object-cover"
@@ -86,34 +228,39 @@ export default function EventPage({ params }: EventPageProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
+                    {/* Main Info Card */}
                     <div className="glass-card p-6 mb-4">
                         <h1 className="heading text-2xl text-white mb-4">{event.title}</h1>
 
                         <div className="space-y-3 mb-6">
                             <div className="flex items-center gap-3 text-white/70">
-                                <Calendar className="w-5 h-5 text-purple-400" />
+                                <Calendar className="w-5 h-5 text-purple-400 flex-shrink-0" />
                                 <span>
-                                    {formatDate(event.date)} at {formatTime(event.time)}
+                                    {formatDate(event.date)} {event.time && `at ${formatTime(event.time)}`}
                                 </span>
                             </div>
                             <div className="flex items-center gap-3 text-white/70">
-                                <MapPin className="w-5 h-5 text-purple-400" />
+                                <MapPin className="w-5 h-5 text-purple-400 flex-shrink-0" />
                                 <div>
-                                    <div>{event.venue}</div>
-                                    <div className="text-sm text-white/50">{event.location}</div>
+                                    <div>{event.venue || 'Venue TBA'}</div>
+                                    {event.location && (
+                                        <div className="text-sm text-white/50">{event.location}</div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        <p className="text-white/60 text-sm leading-relaxed">{event.description}</p>
+                        {event.description && (
+                            <p className="text-white/60 text-sm leading-relaxed">{event.description}</p>
+                        )}
                     </div>
 
-                    {/* Ticket Tiers */}
-                    <div className="glass-card p-6 mb-6">
+                    {/* Ticket Tier Selection */}
+                    <div className="glass-card p-6 mb-4">
                         <h2 className="heading text-lg text-white mb-4">Select Ticket</h2>
 
                         <div className="space-y-3">
-                            {event.tiers.map((tier) => (
+                            {tiers.map((tier) => (
                                 <motion.button
                                     key={tier.id}
                                     className={cn(
@@ -125,58 +272,99 @@ export default function EventPage({ params }: EventPageProps) {
                                     onClick={() => setSelectedTier(tier)}
                                     whileTap={{ scale: 0.98 }}
                                 >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div>
-                                            <h3 className="font-medium text-white">{tier.name}</h3>
-                                            <div className="flex items-center gap-2 text-xs text-white/50 mt-1">
-                                                <Users className="w-3 h-3" />
-                                                <span>{tier.available} available</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="mono text-lg text-purple-400 font-semibold">
-                                                ${tier.price}
-                                            </span>
-                                            <div className="text-xs text-white/50">{tier.currency}</div>
-                                        </div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <h3 className="font-medium text-white">{tier.name}</h3>
+                                        <span className="mono text-lg text-purple-400 font-semibold">
+                                            {formatPrice(tier.price)}
+                                        </span>
                                     </div>
-
-                                    {/* Perks */}
-                                    <div className="flex flex-wrap gap-2 mt-3">
-                                        {tier.perks.map((perk, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-white/5 text-white/60"
-                                            >
-                                                <Check className="w-3 h-3 text-emerald-400" />
-                                                {perk}
-                                            </span>
-                                        ))}
-                                    </div>
+                                    {tier.description && (
+                                        <p className="text-xs text-white/50">{tier.description}</p>
+                                    )}
                                 </motion.button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Purchase Button */}
+                    {/* Quantity Selector */}
+                    <div className="glass-card p-6 mb-6">
+                        <h2 className="heading text-lg text-white mb-4">Quantity</h2>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={decreaseQuantity}
+                                    disabled={quantity <= 1}
+                                    className={cn(
+                                        'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                                        quantity <= 1
+                                            ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                            : 'bg-white/10 text-white hover:bg-white/20'
+                                    )}
+                                >
+                                    <Minus className="w-5 h-5" />
+                                </button>
+
+                                <span className="mono text-3xl text-white font-bold w-12 text-center">
+                                    {quantity}
+                                </span>
+
+                                <button
+                                    onClick={increaseQuantity}
+                                    disabled={quantity >= 5}
+                                    className={cn(
+                                        'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                                        quantity >= 5
+                                            ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                            : 'bg-white/10 text-white hover:bg-white/20'
+                                    )}
+                                >
+                                    <Plus className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="text-right">
+                                <p className="text-xs text-white/50 mb-1">Total</p>
+                                <p className="mono text-2xl text-purple-400 font-bold">
+                                    {formatPrice(totalPrice)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-white/40 mt-3 text-center">
+                            Maximum 5 tickets per transaction
+                        </p>
+                    </div>
+
+                    {/* Purchase Section */}
                     <AnimatePresence mode="wait">
-                        {selectedTier && txState !== 'success' && (
+                        {txState !== 'success' && (
                             <motion.div
                                 className="flex flex-col items-center gap-4 mb-8"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                             >
-                                <div className="text-center mb-2">
-                                    <p className="text-sm text-white/50 mb-1">Total</p>
-                                    <p className="mono text-2xl text-white font-bold">
-                                        ${selectedTier.price} <span className="text-sm text-white/50">USDC</span>
-                                    </p>
-                                </div>
-                                <SwipeButton
-                                    onComplete={handlePurchase}
-                                    label={`Swipe to Pay $${selectedTier.price}`}
-                                />
+                                {/* Error Message */}
+                                {errorMessage && (
+                                    <div className="w-full p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
+                                        {errorMessage}
+                                    </div>
+                                )}
+
+                                {!authenticated ? (
+                                    <button
+                                        onClick={login}
+                                        className="w-full max-w-sm py-4 rounded-full bg-purple-500 hover:bg-purple-600 transition-colors text-white font-medium"
+                                    >
+                                        Sign In to Purchase
+                                    </button>
+                                ) : (
+                                    <SwipeButton
+                                        onComplete={handlePurchase}
+                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${formatPrice(totalPrice)}`}
+                                    />
+                                )}
                             </motion.div>
                         )}
 
@@ -186,17 +374,20 @@ export default function EventPage({ params }: EventPageProps) {
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                             >
-                                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                                    <Check className="w-8 h-8 text-emerald-400" />
+                                <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                                    <Check className="w-10 h-10 text-emerald-400" />
                                 </div>
-                                <h3 className="heading text-xl text-white mb-2">Ticket Minted!</h3>
-                                <p className="text-white/60 text-sm mb-4">
-                                    Your ticket has been added to your wallet.
+                                <h3 className="heading text-xl text-white mb-2">
+                                    {quantity > 1 ? `${quantity} Tickets Purchased!` : 'Ticket Purchased!'}
+                                </h3>
+                                <p className="text-white/60 text-sm mb-6">
+                                    Your {quantity > 1 ? 'tickets have' : 'ticket has'} been added to your wallet.
                                 </p>
                                 <Link
                                     href="/tickets"
-                                    className="inline-block px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
                                 >
+                                    <Ticket className="w-5 h-5" />
                                     View My Tickets
                                 </Link>
                             </motion.div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     User,
@@ -10,10 +10,11 @@ import {
     LogOut,
     ChevronRight,
     Copy,
-    Check
+    Check,
+    Loader2
 } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useTicketStore } from '@/lib/ticket-store';
+import { getUserTickets } from '@/lib/api';
 
 function ToggleSwitch({
     enabled,
@@ -52,12 +53,20 @@ function SettingsItem({
     toggle?: { enabled: boolean; onToggle: () => void };
     danger?: boolean;
 }) {
+    const handleClick = () => {
+        if (!toggle && onClick) {
+            onClick();
+        }
+    };
+
     return (
-        <button
-            onClick={onClick}
-            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors ${danger
-                    ? 'bg-red-500/10 hover:bg-red-500/20'
-                    : 'bg-white/5 hover:bg-white/10'
+        <div
+            onClick={handleClick}
+            role={toggle ? undefined : "button"}
+            tabIndex={toggle ? undefined : 0}
+            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors cursor-pointer ${danger
+                ? 'bg-red-500/10 hover:bg-red-500/20'
+                : 'bg-white/5 hover:bg-white/10'
                 }`}
         >
             <div
@@ -67,25 +76,46 @@ function SettingsItem({
                 <Icon className={`w-5 h-5 ${danger ? 'text-red-400' : 'text-purple-400'}`} />
             </div>
             <div className="flex-1 text-left">
-                <p className={`text-sm font-medium ${danger ? 'text-red-400' : 'text-white'}`}>
+                <span className={`block text-sm font-medium ${danger ? 'text-red-400' : 'text-white'}`}>
                     {label}
-                </p>
-                {value && <p className="text-xs text-white/40">{value}</p>}
+                </span>
+                {value && <span className="block text-xs text-white/40">{value}</span>}
             </div>
             {toggle ? (
                 <ToggleSwitch enabled={toggle.enabled} onToggle={toggle.onToggle} />
             ) : (
                 <ChevronRight className="w-5 h-5 text-white/30" />
             )}
-        </button>
+        </div>
     );
 }
 
 export default function ProfilePage() {
     const { ready, authenticated, user, login, logout } = usePrivy();
-    const ticketCount = useTicketStore((state) => state.tickets.length);
+    const [ticketCount, setTicketCount] = useState(0);
+    const [loadingTickets, setLoadingTickets] = useState(true);
     const [notifications, setNotifications] = useState(true);
     const [copied, setCopied] = useState(false);
+
+    // Fetch real ticket count from Supabase
+    useEffect(() => {
+        async function loadTicketCount() {
+            if (!authenticated || !user) {
+                setTicketCount(0);
+                setLoadingTickets(false);
+                return;
+            }
+
+            setLoadingTickets(true);
+            const tickets = await getUserTickets(user.id);
+            setTicketCount(tickets.length);
+            setLoadingTickets(false);
+        }
+
+        if (ready) {
+            loadTicketCount();
+        }
+    }, [ready, authenticated, user]);
 
     // Get wallet address if authenticated
     const walletAddress = user?.wallet?.address
@@ -180,7 +210,11 @@ export default function ProfilePage() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-xl bg-white/5 text-center">
-                        <p className="mono text-2xl text-purple-400 font-bold">{ticketCount}</p>
+                        {loadingTickets ? (
+                            <Loader2 className="w-6 h-6 text-purple-400 mx-auto animate-spin" />
+                        ) : (
+                            <p className="mono text-2xl text-purple-400 font-bold">{ticketCount}</p>
+                        )}
                         <p className="text-xs text-white/50">Tickets Owned</p>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 text-center">
