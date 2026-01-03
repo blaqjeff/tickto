@@ -24,9 +24,13 @@ export function PrivyClientProvider({ children, appId }: PrivyClientProviderProp
                     logo: undefined,
                 },
                 embeddedWallets: {
-                    createOnLogin: 'users-without-wallets',
+                    solana: {
+                        createOnLogin: 'users-without-wallets',
+                    },
                 },
                 loginMethods: ['wallet', 'email', 'google'],
+                // @ts-ignore - Types mismatch or different prop name for Solana clusters
+                solanaClusters: [{ name: 'devnet', rpcUrl: 'https://api.devnet.solana.com' }],
             }}
         >
             {children}

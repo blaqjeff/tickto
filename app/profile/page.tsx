@@ -13,7 +13,7 @@ import {
     Check,
     Loader2
 } from 'lucide-react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { getUserTickets } from '@/lib/api';
 
 function ToggleSwitch({
@@ -92,6 +92,7 @@ function SettingsItem({
 
 export default function ProfilePage() {
     const { ready, authenticated, user, login, logout } = usePrivy();
+    const { wallets } = useWallets();
     const [ticketCount, setTicketCount] = useState(0);
     const [loadingTickets, setLoadingTickets] = useState(true);
     const [notifications, setNotifications] = useState(true);
@@ -117,18 +118,26 @@ export default function ProfilePage() {
         }
     }, [ready, authenticated, user]);
 
-    // Get wallet address if authenticated
-    const walletAddress = user?.wallet?.address
-        ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`
-        : '0x1234...5678';
+    // Get Solana address with robust filtering (sync with Wallet page)
+    const solanaWallet = wallets.find(w => (w as any).chainType === 'solana');
+    const solanaAccount = user?.linkedAccounts?.find((a: any) => a.type === 'wallet' && (a as any).chainType === 'solana');
 
-    const displayName = user?.email?.address || user?.wallet?.address?.slice(0, 8) || 'Demo User';
+    const address = solanaWallet?.address ||
+        ((user?.wallet as any)?.chainType === 'solana' ? user?.wallet?.address : undefined) ||
+        (solanaAccount as any)?.address;
+
+    const walletAddress = address
+        ? `${address.slice(0, 6)}...${address.slice(-4)}`
+        : 'No Wallet Connected';
+
+    const displayName = user?.email?.address || address?.slice(0, 8) || 'Demo User';
 
     const handleCopyAddress = () => {
-        const fullAddress = user?.wallet?.address || '0x1234567890abcdef';
-        navigator.clipboard.writeText(fullAddress);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (address) {
+            navigator.clipboard.writeText(address);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
     };
 
     // Show login prompt if not authenticated
