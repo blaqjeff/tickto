@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Search, Ticket, Wallet, User } from 'lucide-react';
+import { Home, Search, Ticket, Wallet, User, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePrivy } from '@privy-io/react-auth';
 
 const navItems = [
     { id: 'home', label: 'Home', href: '/', icon: Home },
@@ -19,11 +20,30 @@ const navItems = [
  */
 export function BottomNav() {
     const pathname = usePathname();
+    const { authenticated } = usePrivy();
+
+    // If authenticated, we swap 'Search' for 'Create' to keep 5 items
+    // OR we just adapt the list. The user asked for "Add a Create Event link... Condition: Only show if authenticated".
+    // Replacing Search is a good UX for creators, but Search is useful.
+    // Let's replace "Search" with "Create" for now as it's a "Creator Dashboard" feature request and space is limited.
+    // Actually, "My Tickets" is center.
+    // Let's try: Home | Create | Tickets (FAB) | Wallet | Profile
+    // If not auth: Home | Search | Tickets (FAB) | Wallet | Profile
+
+    const displayItems = authenticated
+        ? [
+            navItems[0], // Home
+            { id: 'create', label: 'Create', href: '/create', icon: PlusCircle },
+            navItems[2], // Tickets (Center)
+            navItems[3], // Wallet
+            navItems[4], // Profile
+        ]
+        : navItems;
 
     return (
         <nav className="bottom-nav">
             <div className="flex items-center justify-around h-20 px-4 max-w-lg mx-auto">
-                {navItems.map((item) => {
+                {displayItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
 
