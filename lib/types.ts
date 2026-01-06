@@ -8,11 +8,14 @@ export interface Event {
     location: string;
     coverImage: string;
     category: EventCategory;
-    tiers: TicketTier[];
+    tiers?: TicketTier[]; // JSONB column from Supabase
     description: string;
     organizer: string;
     featured?: boolean;
     priceUsdc?: number; // USD price for the event
+    price_sol?: number; // SOL price
+    total_tickets?: number;
+    owner_id?: string;
 }
 
 export type EventCategory =

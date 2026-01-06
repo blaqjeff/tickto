@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Sparkles, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Sparkles, Loader2, Search } from 'lucide-react';
 import { GlassCardSimple } from '@/components/ui/GlassCard';
 import { formatDate, formatTime } from '@/lib/mock-data';
 import { getEvents } from '@/lib/api';
@@ -32,14 +32,18 @@ const item = {
 };
 
 function EventCard({ event }: { event: Event }) {
-  // Get price - prefer priceUsdc, fallback to first tier, default to 0
-  const displayPrice = event.priceUsdc || (event.tiers && event.tiers.length > 0
+  // Get price - support tiers
+  const minPrice = event.tiers && event.tiers.length > 0
     ? Math.min(...event.tiers.map((t) => t.price))
-    : 0);
+    : (event.priceUsdc || event.price_sol || 0);
 
-  const priceLabel = displayPrice === 0 ? 'Free' : `$${displayPrice}`;
+  const priceLabel = minPrice === 0
+    ? 'Free'
+    : event.tiers && event.tiers.length > 1
+      ? `From ${minPrice} SOL`
+      : `${minPrice} SOL`;
 
-  // Image fallback: check multiple fields, then use Unsplash default
+  // Image fallback
   const eventAny = event as unknown as { image_url?: string };
   const imageSrc = eventAny.image_url
     || event.coverImage
@@ -47,14 +51,14 @@ function EventCard({ event }: { event: Event }) {
 
   return (
     <Link href={`/event/${event.id}`}>
-      <GlassCardSimple className="overflow-hidden">
+      <GlassCardSimple className="overflow-hidden group h-full flex flex-col">
         {/* Cover Image */}
         <div className="relative h-40 -mx-6 -mt-6 mb-4 overflow-hidden">
           <Image
             src={imageSrc}
             alt={event.title}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
@@ -77,23 +81,25 @@ function EventCard({ event }: { event: Event }) {
         </div>
 
         {/* Event Info */}
-        <h3 className="heading text-lg text-white mb-2 line-clamp-1">
-          {event.title}
-        </h3>
+        <div className="flex-1">
+          <h3 className="heading text-lg text-white mb-2 line-clamp-1">
+            {event.title}
+          </h3>
 
-        <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
-          <Calendar className="w-4 h-4" />
-          <span>
-            {formatDate(event.date)} · {formatTime(event.time)}
-          </span>
+          <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
+            <Calendar className="w-4 h-4" />
+            <span>
+              {formatDate(event.date)} · {formatTime(event.time)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-white/60">
+            <MapPin className="w-4 h-4" />
+            <span className="line-clamp-1">{event.venue || 'Venue TBA'}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-white/60">
-          <MapPin className="w-4 h-4" />
-          <span className="line-clamp-1">{event.venue || 'Venue TBA'}</span>
-        </div>
-
-        {/* Price - Always USD */}
+        {/* Price */}
         <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
           <span className="text-xs text-white/40">Price</span>
           <span className="mono text-purple-400 font-semibold">
@@ -129,7 +135,7 @@ function EmptyState() {
       <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
       <h3 className="heading text-xl text-white mb-2">No Events Found</h3>
       <p className="text-white/50 text-sm">
-        Check back soon for upcoming events!
+        Try adjusting your search terms.
       </p>
     </motion.div>
   );
@@ -138,6 +144,7 @@ function EmptyState() {
 export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     async function loadEvents() {
@@ -149,21 +156,21 @@ export default function HomePage() {
     loadEvents();
   }, []);
 
-  const featuredEvent = events.find((e) => e.featured);
-  const otherEvents = events.filter((e) => !e.featured);
+  // Derived state for filtering
+  const displayedEvents = (!searchQuery || searchQuery.trim() === "")
+    ? events
+    : events.filter(e =>
+      e.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.venue?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  const featuredEvent = displayedEvents.find((e) => e.featured);
+  const otherEvents = displayedEvents.filter((e) => !e.featured);
 
   if (loading) {
     return (
       <div className="px-4 py-6 max-w-lg mx-auto">
-        <motion.header
-          className="mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="heading text-3xl text-white mb-1">Discover Events</h1>
-          <p className="text-white/50">Find your next experience</p>
-        </motion.header>
         <LoadingState />
       </div>
     );
@@ -171,23 +178,37 @@ export default function HomePage() {
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
-      {/* Header */}
+      {/* Header & Search */}
       <motion.header
-        className="mb-8"
+        className="mb-8 space-y-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="heading text-3xl text-white mb-1">Discover Events</h1>
-        <p className="text-white/50">Find your next experience</p>
+        <div>
+          <h1 className="heading text-3xl text-white mb-1">Discover Events</h1>
+          <p className="text-white/50">Find your next experience</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+          <input
+            type="text"
+            placeholder="Search events, artists, or venues..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all shadow-xl"
+          />
+        </div>
       </motion.header>
 
-      {events.length === 0 ? (
+      {displayedEvents.length === 0 ? (
         <EmptyState />
       ) : (
         <>
-          {/* Featured Event */}
-          {featuredEvent && (
+          {/* Featured Event - Only show if no search or if it matches */}
+          {featuredEvent && !searchQuery && (
             <motion.section
               className="mb-8"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -195,17 +216,17 @@ export default function HomePage() {
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <Link href={`/event/${featuredEvent.id}`}>
-                <div className="glass-card overflow-hidden">
-                  <div className="relative h-56">
+                <div className="glass-card overflow-hidden relative group">
+                  <div className="relative h-64">
                     <Image
                       src={featuredEvent.coverImage || '/placeholder-event.jpg'}
                       alt={featuredEvent.title}
                       fill
-                      className="object-cover"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                       sizes="100vw"
                       priority
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
 
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/30 text-purple-300 backdrop-blur-md mb-3">
@@ -234,14 +255,16 @@ export default function HomePage() {
 
           {/* All Events */}
           <section>
-            <h2 className="heading text-xl text-white mb-4">Upcoming Events</h2>
+            <h2 className="heading text-xl text-white mb-4">
+              {searchQuery ? 'Search Results' : 'Upcoming Events'}
+            </h2>
             <motion.div
               className="grid gap-4"
               variants={container}
               initial="hidden"
               animate="show"
             >
-              {otherEvents.map((event) => (
+              {(searchQuery ? displayedEvents : otherEvents).map((event) => (
                 <motion.div key={event.id} variants={item}>
                   <EventCard event={event} />
                 </motion.div>

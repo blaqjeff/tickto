@@ -54,7 +54,9 @@ function EventResult({ event }: { event: Event }) {
                     </div>
                     <div className="mt-2">
                         <span className="mono text-purple-400 text-sm font-semibold">
-                            From ${Math.min(...event.tiers.map((t) => t.price))}
+                            {event.tiers && event.tiers.length > 0
+                                ? `From $${Math.min(...event.tiers.map((t) => t.price))}`
+                                : 'Price TBA'}
                         </span>
                     </div>
                 </div>
@@ -128,8 +130,8 @@ export default function SearchPage() {
                         key={filter.value}
                         onClick={() => setSelectedCategory(filter.value)}
                         className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === filter.value
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-white/5 text-white/60 hover:bg-white/10'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-white/5 text-white/60 hover:bg-white/10'
                             }`}
                     >
                         {filter.label}

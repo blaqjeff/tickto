@@ -3,9 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { motion } from 'framer-motion';
-import { Loader2, Upload, Calendar, MapPin, DollarSign, Tag, Image as ImageIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, Upload, Calendar, MapPin, Tag, Plus, Trash2, Ticket } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+
+interface TicketTier {
+    name: string;
+    price: string;
+    quantity: string;
+}
 
 export default function CreateEventPage() {
     const { authenticated, user } = usePrivy();
@@ -20,9 +26,11 @@ export default function CreateEventPage() {
         description: '',
         date: '',
         location: '',
-        price: '',
-        totalTickets: '',
     });
+
+    const [tiers, setTiers] = useState<TicketTier[]>([
+        { name: 'General', price: '', quantity: '' }
+    ]);
 
     // Access Control
     if (!authenticated) {
@@ -42,12 +50,47 @@ export default function CreateEventPage() {
         }
     };
 
+    const addTier = () => {
+        setTiers([...tiers, { name: '', price: '', quantity: '' }]);
+    };
+
+    const removeTier = (index: number) => {
+        if (tiers.length > 1) {
+            const newTiers = [...tiers];
+            newTiers.splice(index, 1);
+            setTiers(newTiers);
+        }
+    };
+
+    const updateTier = (index: number, field: keyof TicketTier, value: string) => {
+        const newTiers = [...tiers];
+        newTiers[index] = { ...newTiers[index], [field]: value };
+        setTiers(newTiers);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!user) { alert("Please sign in."); return; }
         setIsLoading(true);
 
         try {
-            if (!imageFile || !user) throw new Error("Image and user required");
+            if (!imageFile) throw new Error("Image required");
+
+            // 1. Force Types (Paranoid Mode)
+            const numericTiers = tiers.map(t => ({
+                name: t.name,
+                price: Number(t.price),
+                quantity: Number(t.quantity)
+            }));
+
+            // 2. Validate
+            if (numericTiers.some(t => isNaN(t.price) || isNaN(t.quantity) || t.quantity < 1 || !t.name)) {
+                throw new Error("Invalid price or quantity in tiers.");
+            }
+
+            // 3. Calc Totals
+            const calculatedTotal = numericTiers.reduce((acc, t) => acc + t.quantity, 0);
+            const lowestPrice = Math.min(...numericTiers.map(t => t.price));
 
             // Step A: Upload Image
             const fileExt = imageFile.name.split('.').pop();
@@ -64,31 +107,30 @@ export default function CreateEventPage() {
                 .from('event-images')
                 .getPublicUrl(filePath);
 
-            // Step B: Insert Event
-            const { error: insertError } = await supabase
-                .from('events')
-                .insert([
-                    {
-                        title: formData.title,
-                        description: formData.description,
-                        date: new Date(formData.date).toISOString(),
-                        location: formData.location,
-                        price_sol: parseFloat(formData.price),
-                        total_tickets: parseInt(formData.totalTickets),
-                        cover_image: publicUrl,
-                        owner_id: user.id, // Privy User ID
-                        price_usdc: parseFloat(formData.price) * 150 // Mock conversion for now
-                    }
-                ]);
+            // 4. Clean Payload
+            const payload = {
+                title: formData.title,
+                description: formData.description,
+                date: new Date(formData.date).toISOString(),
+                location: formData.location,
+                price_sol: lowestPrice,
+                total_tickets: calculatedTotal,
+                cover_image: publicUrl,
+                owner_id: user.id, // CRITICAL: Must match auth.uid()
+                price_usdc: lowestPrice * 150, // Mock conversion rate
+                ticket_tiers: numericTiers
+            };
 
+            console.log("Submitting:", payload);
+
+            // 5. Insert
+            const { error: insertError } = await supabase.from('events').insert([payload]);
             if (insertError) throw insertError;
 
-            // Step C: Redirect
-            router.push('/');
-
-        } catch (error) {
-            console.error('Error creating event:', error);
-            alert('Failed to create event. Please try again.');
+            window.location.href = "/"; // Success - Fresh state redirect
+        } catch (err: any) {
+            console.error("Create Failed:", err);
+            alert(`Error: ${err.message || "Check console"}`);
         } finally {
             setIsLoading(false);
         }
@@ -181,38 +223,82 @@ export default function CreateEventPage() {
                         </div>
                     </div>
 
-                    {/* Price */}
-                    <div className="space-y-2">
-                        <label className="text-sm text-white/70 font-medium ml-1">Price (SOL)</label>
-                        <div className="relative">
-                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={formData.price}
-                                onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors"
-                                placeholder="0.00"
-                                required
-                            />
+                    {/* Ticket Tiers Section */}
+                    <div className="space-y-4 md:col-span-2 pt-4 border-t border-white/10">
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm text-white/70 font-medium ml-1 flex items-center gap-2">
+                                <Ticket className="w-4 h-4 text-purple-400" />
+                                Ticket Tiers
+                            </label>
+                            <button
+                                type="button"
+                                onClick={addTier}
+                                className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300 font-medium"
+                            >
+                                <Plus className="w-3 h-3" />
+                                Add Tier
+                            </button>
                         </div>
-                    </div>
 
-                    {/* Total Tickets */}
-                    <div className="space-y-2">
-                        <label className="text-sm text-white/70 font-medium ml-1">Total Tickets</label>
-                        <div className="relative">
-                            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
-                            <input
-                                type="number"
-                                min="1"
-                                value={formData.totalTickets}
-                                onChange={e => setFormData({ ...formData, totalTickets: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors"
-                                placeholder="100"
-                                required
-                            />
+                        <div className="space-y-3">
+                            <AnimatePresence>
+                                {tiers.map((tier, index) => (
+                                    <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="relative grid grid-cols-12 gap-3 bg-white/5 p-3 rounded-xl border border-white/5 group"
+                                    >
+                                        <div className="col-span-12 md:col-span-5">
+                                            <input
+                                                type="text"
+                                                placeholder="Tier Name (e.g. VIP)"
+                                                value={tier.name}
+                                                onChange={e => updateTier(index, 'name', e.target.value)}
+                                                className="w-full bg-transparent border-b border-white/10 focus:border-purple-500 pb-1 text-sm text-white focus:outline-none"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="col-span-5 md:col-span-3">
+                                            <div className="relative">
+                                                <span className="absolute left-0 bottom-1 text-white/30 text-xs">SOL</span>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Price"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={tier.price}
+                                                    onChange={e => updateTier(index, 'price', e.target.value)}
+                                                    className="w-full bg-transparent border-b border-white/10 focus:border-purple-500 pb-1 pl-8 text-sm text-white focus:outline-none text-right"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-span-5 md:col-span-3">
+                                            <input
+                                                type="number"
+                                                placeholder="Qty"
+                                                min="1"
+                                                value={tier.quantity}
+                                                onChange={e => updateTier(index, 'quantity', e.target.value)}
+                                                className="w-full bg-transparent border-b border-white/10 focus:border-purple-500 pb-1 text-sm text-white focus:outline-none text-right"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="col-span-2 md:col-span-1 flex justify-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeTier(index)}
+                                                disabled={tiers.length === 1}
+                                                className="text-white/20 hover:text-red-400 disabled:opacity-0 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                         </div>
                     </div>
 
