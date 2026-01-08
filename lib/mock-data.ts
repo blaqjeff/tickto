@@ -185,43 +185,50 @@ export function getTicketsByOwner(address: string): Ticket[] {
 export function formatDate(dateString: string | null | undefined): string {
     if (!dateString) return 'Date TBA';
 
-    // If it's already a short formatted date (like "Feb 14"), return as-is
-    if (!/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
-        return dateString;
-    }
-
     try {
         const date = new Date(dateString);
-        // Check for Invalid Date
-        if (isNaN(date.getTime())) {
-            return dateString; // Return original if parsing fails
-        }
+        if (isNaN(date.getTime())) return dateString;
+
         return date.toLocaleDateString('en-US', {
-            weekday: 'short',
             month: 'short',
             day: 'numeric',
+            year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
         });
     } catch {
-        return dateString; // Return original on any error
+        return dateString;
     }
 }
 
-export function formatTime(timeString: string | null | undefined): string {
-    if (!timeString) return 'Time TBA';
+export function formatTime(timeInput: string | null | undefined): string {
+    if (!timeInput) return 'Time TBA';
 
-    // If it already contains AM/PM, return as-is
-    if (/[AP]M/i.test(timeString)) {
-        return timeString;
+    // If it's a full ISO string or similar, extract the time
+    try {
+        const date = new Date(timeInput);
+        if (!isNaN(date.getTime()) && timeInput.includes('T')) {
+            return date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+    } catch (e) {
+        // Fallback to string manipulation
     }
 
-    const [hours, minutes] = timeString.split(':');
-    if (!hours || !minutes) return timeString;
+    // If it's just a time string like "20:00"
+    if (timeInput.includes(':')) {
+        const parts = timeInput.split(':');
+        const hours = parseInt(parts[0], 10);
+        const minutes = parts[1].substring(0, 2);
+        
+        if (!isNaN(hours)) {
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHour = hours % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+    }
 
-    const hour = parseInt(hours, 10);
-    if (isNaN(hour)) return timeString;
-
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    return timeInput;
 }
 

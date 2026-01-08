@@ -115,7 +115,7 @@ export default function CreateEventPage() {
                 location: formData.location,
                 price_sol: lowestPrice,
                 total_tickets: calculatedTotal,
-                cover_image: publicUrl,
+                image_url: publicUrl,
                 owner_id: user.id, // CRITICAL: Must match auth.uid()
                 price_usdc: lowestPrice * 150, // Mock conversion rate
                 ticket_tiers: numericTiers

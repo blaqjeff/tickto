@@ -89,13 +89,13 @@ function EventCard({ event }: { event: Event }) {
           <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
             <Calendar className="w-4 h-4" />
             <span>
-              {formatDate(event.date)} · {formatTime(event.time)}
+              {formatDate(event.date)} · {formatTime(event.date || event.time)}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-white/60">
             <MapPin className="w-4 h-4" />
-            <span className="line-clamp-1">{event.venue || 'Venue TBA'}</span>
+            <span className="line-clamp-1">{event.location || event.venue || 'Location TBA'}</span>
           </div>
         </div>
 
@@ -157,16 +157,24 @@ export default function HomePage() {
   }, []);
 
   // Derived state for filtering
-  const displayedEvents = (!searchQuery || searchQuery.trim() === "")
+  const isSearching = searchQuery.trim().length > 0;
+  const lowerQuery = searchQuery.toLowerCase().trim();
+
+  const displayedEvents = !isSearching
     ? events
     : events.filter(e =>
-      e.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.venue?.toLowerCase().includes(searchQuery.toLowerCase())
+      e.title?.toLowerCase().includes(lowerQuery) ||
+      e.location?.toLowerCase().includes(lowerQuery) ||
+      e.venue?.toLowerCase().includes(lowerQuery)
     );
 
-  const featuredEvent = displayedEvents.find((e) => e.featured);
-  const otherEvents = displayedEvents.filter((e) => !e.featured);
+  const featuredEvent = events.find((e) => e.featured);
+
+  // Logic fix: Show all events in the grid EXCEPT the one being shown as the Hero event.
+  // If searching, show everything that matches.
+  const gridEvents = isSearching
+    ? displayedEvents
+    : displayedEvents.filter((e) => e.id !== featuredEvent?.id);
 
   if (loading) {
     return (
@@ -207,8 +215,8 @@ export default function HomePage() {
         <EmptyState />
       ) : (
         <>
-          {/* Featured Event - Only show if no search or if it matches */}
-          {featuredEvent && !searchQuery && (
+          {/* Featured Event - Only show if not searching */}
+          {featuredEvent && !isSearching && (
             <motion.section
               className="mb-8"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -239,11 +247,11 @@ export default function HomePage() {
                       <div className="flex items-center gap-4 text-sm text-white/60">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
-                          {formatDate(featuredEvent.date)}
+                          {formatDate(featuredEvent.date)} · {formatTime(featuredEvent.date || featuredEvent.time)}
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          {featuredEvent.venue}
+                          {featuredEvent.location || featuredEvent.venue || 'Location TBA'}
                         </span>
                       </div>
                     </div>
@@ -256,15 +264,16 @@ export default function HomePage() {
           {/* All Events */}
           <section>
             <h2 className="heading text-xl text-white mb-4">
-              {searchQuery ? 'Search Results' : 'Upcoming Events'}
+              {isSearching ? 'Search Results' : 'Upcoming Events'}
             </h2>
             <motion.div
               className="grid gap-4"
               variants={container}
               initial="hidden"
               animate="show"
+              key={isSearching ? 'search-results' : 'feed'}
             >
-              {(searchQuery ? displayedEvents : otherEvents).map((event) => (
+              {gridEvents.map((event) => (
                 <motion.div key={event.id} variants={item}>
                   <EventCard event={event} />
                 </motion.div>

@@ -236,15 +236,15 @@ export default function EventPage({ params }: EventPageProps) {
                             <div className="flex items-center gap-3 text-white/70">
                                 <Calendar className="w-5 h-5 text-purple-400 flex-shrink-0" />
                                 <span>
-                                    {formatDate(event.date)} {event.time && `at ${formatTime(event.time)}`}
+                                    {formatDate(event.date)} at {formatTime(event.date || event.time)}
                                 </span>
                             </div>
                             <div className="flex items-center gap-3 text-white/70">
                                 <MapPin className="w-5 h-5 text-purple-400 flex-shrink-0" />
                                 <div>
-                                    <div>{event.venue || 'Venue TBA'}</div>
-                                    {event.location && (
-                                        <div className="text-sm text-white/50">{event.location}</div>
+                                    <div className="font-medium text-white">{event.location || event.venue || 'Location TBA'}</div>
+                                    {event.location && event.venue && event.location !== event.venue && (
+                                        <div className="text-sm text-white/50">{event.venue}</div>
                                     )}
                                 </div>
                             </div>
