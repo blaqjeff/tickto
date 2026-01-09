@@ -16,6 +16,7 @@ export interface Event {
     price_sol?: number; // SOL price
     total_tickets?: number;
     owner_id?: string;
+    organizer_wallet?: string; // Solana address for receiving payments
 }
 
 export type EventCategory =

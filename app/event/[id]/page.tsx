@@ -6,13 +6,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calendar, MapPin, Check, Loader2, Plus, Minus, Ticket } from 'lucide-react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { SwipeButton } from '@/components/ui/SwipeButton';
 import { ConfettiEffect } from '@/components/ui/ConfettiEffect';
 import { formatDate, formatTime } from '@/lib/mock-data';
-import { getEventById, buyTicket } from '@/lib/api';
+import { getEventById } from '@/lib/api';
+import { supabase } from '@/lib/supabaseClient';
 import { Event, TransactionState } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import {
+    Connection,
+    PublicKey,
+    Transaction,
+    SystemProgram,
+    LAMPORTS_PER_SOL
+} from '@solana/web3.js';
 
 interface EventPageProps {
     params: Promise<{ id: string }>;
@@ -27,19 +35,23 @@ interface TierOption {
 }
 
 /**
- * Format price for display - always USD
+ * Format price for display - SOL
  */
-function formatPrice(price: number | undefined | null): string {
+function formatPriceSol(price: number | undefined | null): string {
     if (price === undefined || price === null || price === 0) {
         return 'Free';
     }
-    return `$${price.toFixed(0)}`;
+    return `${price} SOL`;
 }
+
+// Solana RPC endpoint (use devnet for testing, mainnet-beta for production)
+const SOLANA_RPC_URL = 'https://api.devnet.solana.com';
 
 export default function EventPage({ params }: EventPageProps) {
     const { id } = use(params);
     const router = useRouter();
     const { ready, authenticated, user, login } = usePrivy();
+    const { wallets } = useWallets();
 
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
@@ -74,31 +86,25 @@ export default function EventPage({ params }: EventPageProps) {
 
     // Build tier options from event data
     function getTiers(eventData: Event): TierOption[] {
-        const basePrice = eventData.priceUsdc || 0;
+        const basePrice = eventData.price_sol || 0;
 
         // If event has tiers, use them
         if (eventData.tiers && eventData.tiers.length > 0) {
             return eventData.tiers.map(tier => ({
-                id: tier.id,
+                id: tier.id || tier.name,
                 name: tier.name,
                 price: tier.price,
                 description: tier.perks?.join(', ') || ''
             }));
         }
 
-        // Otherwise create default tiers
+        // Otherwise create default tier
         return [
             {
                 id: 'general',
                 name: 'General Admission',
                 price: basePrice,
                 description: 'Standard entry to the event'
-            },
-            {
-                id: 'vip',
-                name: 'VIP Experience',
-                price: basePrice * 2 || 100,
-                description: 'Premium seating, early entry, exclusive merch'
             }
         ];
     }
@@ -115,7 +121,7 @@ export default function EventPage({ params }: EventPageProps) {
         if (quantity > 1) setQuantity(q => q - 1);
     };
 
-    // Handle purchase
+    // Handle purchase with real Solana transaction
     const handlePurchase = async () => {
         if (!event || !selectedTier) return;
         setErrorMessage(null);
@@ -126,30 +132,106 @@ export default function EventPage({ params }: EventPageProps) {
             return;
         }
 
+        // Validate organizer wallet exists
+        if (!event.organizer_wallet) {
+            setErrorMessage("This event cannot accept payments. The organizer has no connected wallet.");
+            return;
+        }
+
+        // Get user's Solana wallet
+        const solanaWallet = wallets.find(w => w.walletClientType === 'solana');
+        if (!solanaWallet?.address) {
+            setErrorMessage("Please connect a Solana wallet to make purchases.");
+            return;
+        }
+
         setPurchasing(true);
+        setTxState('processing');
 
         try {
-            // Call the buyTicket API with quantity
-            const result = await buyTicket(
-                event.id,
-                user.id,
-                selectedTier.id,
-                selectedTier.name,
-                quantity,
-                selectedTier.price
-            );
+            // Calculate lamports (1 SOL = 1,000,000,000 lamports)
+            const lamports = Math.floor(totalPrice * LAMPORTS_PER_SOL);
 
-            if (result.success && result.tickets && result.tickets.length > 0) {
-                // Only show success after confirmed purchase
-                setShowConfetti(true);
-                setTxState('success');
-            } else {
-                setErrorMessage(result.error || 'Purchase failed. Please try again.');
-                setTxState('error');
+            // Skip transaction for free tickets
+            let signature = 'free-ticket';
+
+            if (lamports > 0) {
+                // Connect to Solana
+                const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+
+                // Create the transfer transaction
+                const transaction = new Transaction().add(
+                    SystemProgram.transfer({
+                        fromPubkey: new PublicKey(solanaWallet.address),
+                        toPubkey: new PublicKey(event.organizer_wallet),
+                        lamports: lamports,
+                    })
+                );
+
+                // Get latest blockhash
+                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = new PublicKey(solanaWallet.address);
+
+                // Get the wallet provider and sign/send transaction
+                const provider = await solanaWallet.getEthereumProvider();
+
+                // For Solana wallets, we need to use the native signAndSendTransaction
+                // This depends on the wallet adapter - for embedded wallets, use Privy's method
+                if (solanaWallet.walletClientType === 'privy') {
+                    // For Privy embedded wallets
+                    const signedTx = await (provider as any).signTransaction(transaction);
+                    signature = await connection.sendRawTransaction(signedTx.serialize());
+                } else {
+                    // For external wallets (Phantom, etc.)
+                    const signedTx = await (provider as any).signAndSendTransaction(transaction);
+                    signature = signedTx.signature;
+                }
+
+                console.log("Payment sent! Signature:", signature);
+
+                // Wait for confirmation
+                await connection.confirmTransaction({
+                    signature,
+                    blockhash,
+                    lastValidBlockHeight
+                }, 'confirmed');
             }
-        } catch (err) {
+
+            // ONLY save ticket after successful payment
+            setTxState('minting');
+
+            // Create ticket records
+            const ticketPromises = [];
+            for (let i = 0; i < quantity; i++) {
+                ticketPromises.push(
+                    supabase.from('tickets').insert({
+                        event_id: event.id,
+                        owner_id: user.id,
+                        tier_name: selectedTier.name,
+                        price_sol: selectedTier.price,
+                        transaction_signature: signature,
+                        status: 'valid',
+                        purchased_at: new Date().toISOString()
+                    })
+                );
+            }
+
+            const results = await Promise.all(ticketPromises);
+            const hasError = results.some(r => r.error);
+
+            if (hasError) {
+                console.error("Ticket save errors:", results.filter(r => r.error));
+                throw new Error("Payment successful but failed to save ticket. Please contact support.");
+            }
+
+            // Success!
+            setShowConfetti(true);
+            setTxState('success');
+
+        } catch (err: any) {
             console.error('Purchase error:', err);
-            setErrorMessage('An unexpected error occurred. Please try again.');
+            setErrorMessage(err.message || 'Transaction failed. You were not charged.');
             setTxState('error');
         } finally {
             setPurchasing(false);
@@ -275,7 +357,7 @@ export default function EventPage({ params }: EventPageProps) {
                                     <div className="flex items-center justify-between mb-1">
                                         <h3 className="font-medium text-white">{tier.name}</h3>
                                         <span className="mono text-lg text-purple-400 font-semibold">
-                                            {formatPrice(tier.price)}
+                                            {formatPriceSol(tier.price)}
                                         </span>
                                     </div>
                                     {tier.description && (
@@ -326,7 +408,7 @@ export default function EventPage({ params }: EventPageProps) {
                             <div className="text-right">
                                 <p className="text-xs text-white/50 mb-1">Total</p>
                                 <p className="mono text-2xl text-purple-400 font-bold">
-                                    {formatPrice(totalPrice)}
+                                    {formatPriceSol(totalPrice)}
                                 </p>
                             </div>
                         </div>
@@ -352,6 +434,21 @@ export default function EventPage({ params }: EventPageProps) {
                                     </div>
                                 )}
 
+                                {/* Processing State */}
+                                {txState === 'processing' && (
+                                    <div className="w-full p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Waiting for wallet approval...
+                                    </div>
+                                )}
+
+                                {txState === 'minting' && (
+                                    <div className="w-full p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Payment confirmed! Creating your ticket...
+                                    </div>
+                                )}
+
                                 {!authenticated ? (
                                     <button
                                         onClick={login}
@@ -362,7 +459,7 @@ export default function EventPage({ params }: EventPageProps) {
                                 ) : (
                                     <SwipeButton
                                         onComplete={handlePurchase}
-                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${formatPrice(totalPrice)}`}
+                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${formatPriceSol(totalPrice)}`}
                                     />
                                 )}
                             </motion.div>

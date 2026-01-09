@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Upload, Calendar, MapPin, Tag, Plus, Trash2, Ticket } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
@@ -15,6 +15,7 @@ interface TicketTier {
 
 export default function CreateEventPage() {
     const { authenticated, user } = usePrivy();
+    const { wallets } = useWallets();
     const router = useRouter();
 
     const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +77,12 @@ export default function CreateEventPage() {
         try {
             if (!imageFile) throw new Error("Image required");
 
+            // Get Solana wallet for receiving payments
+            const solanaWallet = wallets.find(w => w.walletClientType === 'solana');
+            if (!solanaWallet?.address) {
+                throw new Error("Please connect a Solana wallet to receive payments.");
+            }
+
             // 1. Force Types (Paranoid Mode)
             const numericTiers = tiers.map(t => ({
                 name: t.name,
@@ -116,8 +123,9 @@ export default function CreateEventPage() {
                 price_sol: lowestPrice,
                 total_tickets: calculatedTotal,
                 image_url: publicUrl,
-                owner_id: user.id, // CRITICAL: Must match auth.uid()
-                price_usdc: lowestPrice * 150, // Mock conversion rate
+                owner_id: user.id,
+                organizer_wallet: solanaWallet.address, // Organizer's wallet for receiving payments
+                price_usdc: lowestPrice * 150,
                 ticket_tiers: numericTiers
             };
 
