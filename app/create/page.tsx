@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ interface TicketTier {
 }
 
 export default function CreateEventPage() {
-    const { authenticated, user } = usePrivy();
+    const { ready, authenticated, user } = usePrivy();
     const { wallets } = useWallets();
     const router = useRouter();
 
@@ -34,9 +34,18 @@ export default function CreateEventPage() {
     ]);
 
     // Access Control
-    if (!authenticated) {
-        if (typeof window !== 'undefined') router.push('/');
-        return null;
+    useEffect(() => {
+        if (ready && !authenticated) {
+            router.push('/');
+        }
+    }, [ready, authenticated, router]);
+
+    if (!ready || !authenticated) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+            </div>
+        );
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,9 +87,13 @@ export default function CreateEventPage() {
             if (!imageFile) throw new Error("Image required");
 
             // Get Solana wallet for receiving payments
-            const solanaWallet = wallets.find(w => w.walletClientType === 'solana');
-            if (!solanaWallet?.address) {
-                throw new Error("Please connect a Solana wallet to receive payments.");
+            // prioritize connected wallet, fallback to embedded user wallet
+            const organizerAddress = wallets[0]?.address || user?.wallet?.address;
+
+            if (!organizerAddress) {
+                alert("No Solana wallet found. Please sign in.");
+                setIsLoading(false);
+                return;
             }
 
             // 1. Force Types (Paranoid Mode)
@@ -124,7 +137,7 @@ export default function CreateEventPage() {
                 total_tickets: calculatedTotal,
                 image_url: publicUrl,
                 owner_id: user.id,
-                organizer_wallet: solanaWallet.address, // Organizer's wallet for receiving payments
+                organizer_wallet: organizerAddress, // Organizer's wallet for receiving payments
                 price_usdc: lowestPrice * 150,
                 ticket_tiers: numericTiers
             };

@@ -44,8 +44,8 @@ function formatPriceSol(price: number | undefined | null): string {
     return `${price} SOL`;
 }
 
-// Solana RPC endpoint (use devnet for testing, mainnet-beta for production)
-const SOLANA_RPC_URL = 'https://api.devnet.solana.com';
+// Solana RPC endpoint (use environment variable with devnet fallback)
+const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 
 export default function EventPage({ params }: EventPageProps) {
     const { id } = use(params);
