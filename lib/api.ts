@@ -19,6 +19,8 @@ interface EventRow {
     featured: boolean;
     tiers: TicketTier[] | null;
     price_usdc: number | null;
+    price_sol: number | null; // Added
+    organizer_wallet: string | null; // Added
     created_at: string;
 }
 
@@ -41,6 +43,8 @@ function transformEvent(row: EventRow): Event & { image_url?: string } {
         featured: row.featured,
         tiers: row.tiers || [],
         priceUsdc: row.price_usdc || 0,
+        price_sol: row.price_sol || 0, // Added
+        organizer_wallet: row.organizer_wallet || undefined, // Added
         image_url: row.image_url || undefined,
     };
 }

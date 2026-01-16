@@ -38,9 +38,8 @@ interface TierOption {
  * Format price for display - SOL
  */
 function formatPriceSol(price: number | undefined | null): string {
-    if (price === undefined || price === null || price === 0) {
-        return 'Free';
-    }
+    if (price === undefined || price === null) return 'Price TBA';
+    if (price === 0) return 'Free';
     return `${price} SOL`;
 }
 
@@ -50,7 +49,7 @@ const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.de
 export default function EventPage({ params }: EventPageProps) {
     const { id } = use(params);
     const router = useRouter();
-    const { ready, authenticated, user, login } = usePrivy();
+    const { ready, authenticated, user, login, createWallet } = usePrivy();
     const { wallets } = useWallets();
 
     const [event, setEvent] = useState<Event | null>(null);
@@ -138,9 +137,38 @@ export default function EventPage({ params }: EventPageProps) {
             return;
         }
 
-        // Get user's Solana wallet
-        const solanaWallet = wallets.find(w => w.walletClientType === 'solana');
+        // Match by address is the most robust way for embedded wallets
+        const targetAddress = user?.wallet?.address;
+
+        console.log("Purchase Debug Full:", JSON.stringify(wallets, (key, value) =>
+            (key === 'provider' || key === 'ethereum') ? '...' : value
+            , 2));
+
+        // 1. FILTER: strictly get only Solana wallets first (ignore EVM)
+        // Check for chainType 'solana' (mostly for embedded) OR walletClientType 'solana' (external)
+        const allSolanaWallets = wallets.filter(w => (w as any).chainType === 'solana' || w.walletClientType === 'solana');
+        console.log("Filtered Solana Wallets:", allSolanaWallets.length);
+
+        // 2. FIND: Try to find the one that matches the user's primary address (if it's a Solana address)
+        // 3. FALLBACK: Use the first available Solana wallet
+        let solanaWallet = allSolanaWallets.find(w => w.address === targetAddress) || allSolanaWallets[0];
+
+        // 4. CREATE/RECOVER: If no active Solana wallet found, try to create/active one (idempotent for embedded)
+        if (!solanaWallet) {
+            console.log("No active Solana wallet found. Attempting to retrieve embedded Solana wallet...");
+            try {
+                const wallet = await createWallet({ chainType: 'solana' });
+                if (wallet) {
+                    console.log("Successfully retrieved Solana wallet:", wallet.address);
+                    solanaWallet = wallet as any;
+                }
+            } catch (err) {
+                console.error("Failed to create/retrieve Solana wallet:", err);
+            }
+        }
+
         if (!solanaWallet?.address) {
+            console.error("Critical: No signing wallet found in 'wallets' array.");
             setErrorMessage("Please connect a Solana wallet to make purchases.");
             return;
         }
@@ -159,11 +187,36 @@ export default function EventPage({ params }: EventPageProps) {
                 // Connect to Solana
                 const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
 
+                // Sanitize and Validate Keys
+                const payerKeyStr = solanaWallet.address?.trim();
+                const organizerKeyStr = event.organizer_wallet?.trim();
+
+                console.log("Keys Debug:", { payer: payerKeyStr, organizer: organizerKeyStr });
+
+                if (!payerKeyStr || !organizerKeyStr) {
+                    throw new Error("Invalid wallet addresses. Please contact support.");
+                }
+
+                let fromPubkey: PublicKey;
+                let toPubkey: PublicKey;
+
+                try {
+                    fromPubkey = new PublicKey(payerKeyStr);
+                } catch (e) {
+                    throw new Error(`Your wallet address is invalid: ${payerKeyStr}`);
+                }
+
+                try {
+                    toPubkey = new PublicKey(organizerKeyStr);
+                } catch (e) {
+                    throw new Error(`Organizer wallet address is invalid: ${organizerKeyStr}`);
+                }
+
                 // Create the transfer transaction
                 const transaction = new Transaction().add(
                     SystemProgram.transfer({
-                        fromPubkey: new PublicKey(solanaWallet.address),
-                        toPubkey: new PublicKey(event.organizer_wallet),
+                        fromPubkey,
+                        toPubkey,
                         lamports: lamports,
                     })
                 );
@@ -357,7 +410,7 @@ export default function EventPage({ params }: EventPageProps) {
                                     <div className="flex items-center justify-between mb-1">
                                         <h3 className="font-medium text-white">{tier.name}</h3>
                                         <span className="mono text-lg text-purple-400 font-semibold">
-                                            {formatPriceSol(tier.price)}
+                                            {tier.price === 0 ? 'Free' : `${tier.price} SOL`}
                                         </span>
                                     </div>
                                     {tier.description && (
@@ -459,7 +512,7 @@ export default function EventPage({ params }: EventPageProps) {
                                 ) : (
                                     <SwipeButton
                                         onComplete={handlePurchase}
-                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${formatPriceSol(totalPrice)}`}
+                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${(selectedTier?.price! * quantity).toFixed(3)} SOL`}
                                     />
                                 )}
                             </motion.div>

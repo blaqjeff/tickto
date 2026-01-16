@@ -81,36 +81,34 @@ export default function CreateEventPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) { alert("Please sign in."); return; }
+
+        // 1. Validation: Prevent Crash if Date is empty
+        if (!formData.date) {
+            alert("Please select a date and time.");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
-            if (!imageFile) throw new Error("Image required");
+            // 2. Fallback: Use embedded wallet if external one isn't connected
+            // Fallback to user.wallet if wallets[0] is empty (fixes social login issue)
+            const organizerWallet = user?.wallet?.address || wallets[0]?.address;
 
-            // Get Solana wallet for receiving payments
-            // prioritize connected wallet, fallback to embedded user wallet
-            const organizerAddress = wallets[0]?.address || user?.wallet?.address;
-
-            if (!organizerAddress) {
-                alert("No Solana wallet found. Please sign in.");
+            if (!organizerWallet) {
+                alert("Error: No wallet address found on your account. Please sign in again.");
                 setIsLoading(false);
                 return;
             }
+            console.log("Saving Organizer Wallet:", organizerWallet);
 
-            // 1. Force Types (Paranoid Mode)
-            const numericTiers = tiers.map(t => ({
-                name: t.name,
-                price: Number(t.price),
-                quantity: Number(t.quantity)
-            }));
-
-            // 2. Validate
-            if (numericTiers.some(t => isNaN(t.price) || isNaN(t.quantity) || t.quantity < 1 || !t.name)) {
-                throw new Error("Invalid price or quantity in tiers.");
+            // 3. Safe Date Conversion
+            const eventDate = new Date(formData.date);
+            if (isNaN(eventDate.getTime())) {
+                throw new Error("Invalid date selected. Please try again.");
             }
 
-            // 3. Calc Totals
-            const calculatedTotal = numericTiers.reduce((acc, t) => acc + t.quantity, 0);
-            const lowestPrice = Math.min(...numericTiers.map(t => t.price));
+            if (!imageFile) throw new Error("Image required");
 
             // Step A: Upload Image
             const fileExt = imageFile.name.split('.').pop();
@@ -127,18 +125,32 @@ export default function CreateEventPage() {
                 .from('event-images')
                 .getPublicUrl(filePath);
 
-            // 4. Clean Payload
+            // 4. Prepare Payload (Paranoid Type Safety)
+            const numericTiers = tiers.map(t => ({
+                name: t.name,
+                price: Number(t.price),
+                quantity: Number(t.quantity)
+            }));
+
+            // Validate numeric tiers
+            if (numericTiers.some(t => isNaN(t.price) || isNaN(t.quantity) || t.quantity < 1 || !t.name)) {
+                throw new Error("Invalid price or quantity in tiers.");
+            }
+
+            const totalTickets = numericTiers.reduce((sum, t) => sum + t.quantity, 0);
+            const lowestPrice = Math.min(...numericTiers.map(t => t.price));
+
             const payload = {
                 title: formData.title,
                 description: formData.description,
-                date: new Date(formData.date).toISOString(),
+                date: eventDate.toISOString(), // Safe now because we checked it above
                 location: formData.location,
                 price_sol: lowestPrice,
-                total_tickets: calculatedTotal,
+                total_tickets: totalTickets,
                 image_url: publicUrl,
                 owner_id: user.id,
-                organizer_wallet: organizerAddress, // Organizer's wallet for receiving payments
-                price_usdc: lowestPrice * 150,
+                organizer_wallet: organizerWallet,
+                price_usdc: lowestPrice * 150, // Keep for legacy, but UI should default to SOL
                 ticket_tiers: numericTiers
             };
 
@@ -287,7 +299,7 @@ export default function CreateEventPage() {
                                                 <input
                                                     type="number"
                                                     placeholder="Price"
-                                                    step="0.01"
+                                                    step="0.001"
                                                     min="0"
                                                     value={tier.price}
                                                     onChange={e => updateTier(index, 'price', e.target.value)}

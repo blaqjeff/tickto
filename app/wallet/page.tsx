@@ -48,7 +48,7 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
 
             {/* Amount */}
             <span className="mono text-sm font-semibold text-white">
-                -${Math.abs(transaction.amount).toFixed(2)}
+                -{Math.abs(transaction.amount).toFixed(3)} SOL
             </span>
         </motion.div>
     );
@@ -121,7 +121,7 @@ export default function WalletPage() {
                         .from('tickets')
                         .select(`
                             *,
-                            events ( title, price_usdc )
+                            events ( title, price_usdc, price_sol )
                         `)
                         .eq('owner_id', user.id)
                         .order('created_at', { ascending: false });
@@ -131,7 +131,7 @@ export default function WalletPage() {
                             id: ticket.id,
                             type: 'purchase',
                             title: `Ticket: ${ticket.events?.title || 'Event'}`,
-                            amount: ticket.price_paid || ticket.events?.price_usdc || 0,
+                            amount: ticket.price_paid || ticket.events?.price_sol || 0,
                             date: ticket.created_at || ticket.minted_at,
                             status: 'completed',
                         }));
