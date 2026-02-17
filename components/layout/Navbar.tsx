@@ -23,9 +23,13 @@ export function Navbar() {
         (link) => !link.authRequired || authenticated
     );
 
-    // Truncate wallet address for display
-    const displayName = user?.wallet?.address
-        ? `${user.wallet.address.slice(0, 4)}...${user.wallet.address.slice(-4)}`
+    // Prefer Solana wallet address for display
+    const solanaWallet = user?.linkedAccounts?.find(
+        (a: any) => a.type === 'wallet' && a.chainType === 'solana'
+    ) as any;
+    const walletAddress = solanaWallet?.address || user?.wallet?.address;
+    const displayName = walletAddress
+        ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
         : user?.email?.address
             ? user.email.address.split('@')[0]
             : 'Account';

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calendar, MapPin, Check, Loader2, Plus, Minus, Ticket } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useWallets } from '@privy-io/react-auth/solana';
+import { useWallets, useSignAndSendTransaction } from '@privy-io/react-auth/solana';
 import { SwipeButton } from '@/components/ui/SwipeButton';
 import { ConfettiEffect } from '@/components/ui/ConfettiEffect';
 import { formatDate, formatTime } from '@/lib/mock-data';
@@ -52,6 +52,7 @@ export default function EventPage({ params }: EventPageProps) {
     const router = useRouter();
     const { ready, authenticated, user, login } = usePrivy();
     const { wallets } = useWallets();
+    const { signAndSendTransaction } = useSignAndSendTransaction();
 
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
@@ -138,18 +139,20 @@ export default function EventPage({ params }: EventPageProps) {
             return;
         }
 
-        // Privy v3: `wallets` from `@privy-io/react-auth/solana` contains ONLY Solana wallets
-        console.log("Solana wallets:", wallets.length, wallets.map(w => w.address?.slice(0, 8)));
+        // Privy v3: wallets from @privy-io/react-auth/solana contains Solana wallets
+        console.log("Solana wallets:", wallets.length, wallets.map(w => ({ addr: w.address?.slice(0, 8), type: w.walletClientType })));
+        console.log("User linked accounts:", user?.linkedAccounts?.map((a: any) => ({ type: a.type, chain: a.chainType, addr: a.address?.slice(0, 8) })));
 
-        // Pick the wallet matching the user's primary address, or just the first one
-        const targetAddress = user?.wallet?.address;
-        const solanaWallet = wallets.find(w => w.address === targetAddress) || wallets[0];
+        // Try to find wallet from useWallets() hook
+        const solanaWallet = wallets[0];
 
         if (!solanaWallet?.address) {
             console.error("Critical: No signing wallet found in 'wallets' array.");
-            setErrorMessage("Please connect a Solana wallet to make purchases.");
+            setErrorMessage("No Solana wallet found. Please log out and log back in to create one.");
             return;
         }
+
+        console.log("Using Solana wallet:", solanaWallet.address);
 
         setPurchasing(true);
         setTxState('processing');
@@ -202,20 +205,28 @@ export default function EventPage({ params }: EventPageProps) {
                 // Get latest blockhash
                 const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
                 transaction.recentBlockhash = blockhash;
-                transaction.feePayer = new PublicKey(solanaWallet.address);
+                transaction.feePayer = fromPubkey;
 
-                // Use the Solana wallet's native signing method (works for both embedded & external)
-                const signedTx = await (solanaWallet as any).signTransaction(transaction);
-                signature = await connection.sendRawTransaction(signedTx.serialize());
+                // Serialize the transaction for Privy's signAndSendTransaction
+                const serializedTx = transaction.serialize({
+                    requireAllSignatures: false,
+                    verifySignatures: false,
+                });
 
-                console.log("Payment sent! Signature:", signature);
+                // Use Privy v3's signAndSendTransaction hook (works for embedded + external wallets)
+                const result = await signAndSendTransaction({
+                    transaction: new Uint8Array(serializedTx),
+                    wallet: solanaWallet,
+                    chain: 'solana:devnet',
+                });
 
-                // Wait for confirmation
-                await connection.confirmTransaction({
-                    signature,
-                    blockhash,
-                    lastValidBlockHeight
-                }, 'confirmed');
+                // Extract signature from result
+                const sigBytes = result.signature;
+                // Convert Uint8Array signature to base58 string
+                const { base58 } = await import('@scure/base');
+                signature = base58.encode(sigBytes);
+
+                console.log("Payment sent & confirmed by Privy! Signature:", signature);
             }
 
             // ONLY save ticket after successful payment
@@ -224,15 +235,19 @@ export default function EventPage({ params }: EventPageProps) {
             // Create ticket records
             const ticketPromises = [];
             for (let i = 0; i < quantity; i++) {
+                const qrCode = `${event.id}-${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`;
+                const tokenId = `tkt-${Date.now()}-${i}`;
                 ticketPromises.push(
                     supabase.from('tickets').insert({
                         event_id: event.id,
                         owner_id: user.id,
                         tier_name: selectedTier.name,
-                        price_sol: selectedTier.price,
-                        transaction_signature: signature,
+                        tier: selectedTier.name.toLowerCase().replace(/\s+/g, '-'),
+                        qr_code: qrCode,
+                        token_id: tokenId,
                         status: 'valid',
-                        purchased_at: new Date().toISOString()
+                        minted_at: new Date().toISOString(),
+                        price_paid: selectedTier.price,
                     })
                 );
             }
@@ -241,8 +256,9 @@ export default function EventPage({ params }: EventPageProps) {
             const hasError = results.some(r => r.error);
 
             if (hasError) {
-                console.error("Ticket save errors:", results.filter(r => r.error));
-                throw new Error("Payment successful but failed to save ticket. Please contact support.");
+                const errors = results.filter(r => r.error).map(r => r.error);
+                console.error("Ticket save errors:", JSON.stringify(errors, null, 2));
+                throw new Error(`Payment successful but failed to save ticket: ${errors[0]?.message || 'Unknown error'}`);
             }
 
             // Success!
