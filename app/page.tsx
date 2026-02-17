@@ -22,7 +22,7 @@ const container = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
@@ -51,15 +51,15 @@ function EventCard({ event }: { event: Event }) {
 
   return (
     <Link href={`/event/${event.id}`}>
-      <GlassCardSimple className="overflow-hidden group h-full flex flex-col">
+      <GlassCardSimple className="overflow-hidden group h-full flex flex-col glass-card-hover">
         {/* Cover Image */}
-        <div className="relative h-40 -mx-6 -mt-6 mb-4 overflow-hidden">
+        <div className="relative h-44 -mx-6 -mt-6 mb-4 overflow-hidden">
           <Image
             src={imageSrc}
             alt={event.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
-            sizes="(max-width: 768px) 100vw, 50vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
 
@@ -87,14 +87,14 @@ function EventCard({ event }: { event: Event }) {
           </h3>
 
           <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
-            <Calendar className="w-4 h-4" />
-            <span>
+            <Calendar className="w-4 h-4 shrink-0" />
+            <span className="line-clamp-1">
               {formatDate(event.date)} · {formatTime(event.date || event.time)}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-white/60">
-            <MapPin className="w-4 h-4" />
+            <MapPin className="w-4 h-4 shrink-0" />
             <span className="line-clamp-1">{event.location || event.venue || 'Location TBA'}</span>
           </div>
         </div>
@@ -128,7 +128,7 @@ function LoadingState() {
 function EmptyState() {
   return (
     <motion.div
-      className="glass-card p-12 text-center"
+      className="glass-card p-12 text-center max-w-md mx-auto"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
     >
@@ -178,28 +178,28 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="px-4 py-6 max-w-lg mx-auto">
+      <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto">
         <LoadingState />
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-6 max-w-lg mx-auto">
+    <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto">
       {/* Header & Search */}
       <motion.header
-        className="mb-8 space-y-4"
+        className="mb-8 space-y-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div>
-          <h1 className="heading text-3xl text-white mb-1">Discover Events</h1>
+          <h1 className="heading text-3xl md:text-4xl text-white mb-1">Discover Events</h1>
           <p className="text-white/50">Find your next experience</p>
         </div>
 
         {/* Search Bar */}
-        <div className="relative">
+        <div className="relative max-w-2xl">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
           <input
             type="text"
@@ -218,14 +218,14 @@ export default function HomePage() {
           {/* Featured Event - Only show if not searching */}
           {featuredEvent && !isSearching && (
             <motion.section
-              className="mb-8"
+              className="mb-10"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <Link href={`/event/${featuredEvent.id}`}>
-                <div className="glass-card overflow-hidden relative group">
-                  <div className="relative h-64">
+                <div className="glass-card glass-card-hover overflow-hidden relative group">
+                  <div className="relative h-64 md:h-80 lg:h-96">
                     <Image
                       src={featuredEvent.coverImage || '/placeholder-event.jpg'}
                       alt={featuredEvent.title}
@@ -236,15 +236,15 @@ export default function HomePage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
 
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/30 text-purple-300 backdrop-blur-md mb-3">
                         <Sparkles className="w-3 h-3" />
                         Featured Event
                       </span>
-                      <h2 className="heading text-2xl text-white mb-2">
+                      <h2 className="heading text-2xl md:text-3xl lg:text-4xl text-white mb-2">
                         {featuredEvent.title}
                       </h2>
-                      <div className="flex items-center gap-4 text-sm text-white/60">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           {formatDate(featuredEvent.date)} · {formatTime(featuredEvent.date || featuredEvent.time)}
@@ -261,13 +261,13 @@ export default function HomePage() {
             </motion.section>
           )}
 
-          {/* All Events */}
+          {/* All Events - Responsive Grid */}
           <section>
-            <h2 className="heading text-xl text-white mb-4">
+            <h2 className="heading text-xl text-white mb-6">
               {isSearching ? 'Search Results' : 'Upcoming Events'}
             </h2>
             <motion.div
-              className="grid gap-4"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               variants={container}
               initial="hidden"
               animate="show"

@@ -22,6 +22,7 @@ export function PrivyClientProvider({ children, appId }: PrivyClientProviderProp
                     accentColor: '#a855f7',
                     showWalletLoginFirst: true,
                     logo: undefined,
+                    walletChainType: 'solana-only',
                 },
                 embeddedWallets: {
                     solana: {
@@ -29,8 +30,11 @@ export function PrivyClientProvider({ children, appId }: PrivyClientProviderProp
                     },
                 },
                 loginMethods: ['wallet', 'email', 'google'],
-                // @ts-ignore - Types mismatch or different prop name for Solana clusters
-                solanaClusters: [{ name: 'devnet', rpcUrl: 'https://api.devnet.solana.com' }],
+                solana: {
+                    rpcs: {
+                        devnet: 'https://api.devnet.solana.com',
+                    },
+                },
             }}
         >
             {children}

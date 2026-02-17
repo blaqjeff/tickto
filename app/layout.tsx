@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { Navbar } from "@/components/layout/Navbar";
 import { GradientMesh } from "@/components/layout/GradientMesh";
 import { PrivyWrapper } from "@/components/providers/PrivyWrapper";
 
@@ -34,10 +34,10 @@ export default function RootLayout({
       >
         <PrivyWrapper>
           <GradientMesh />
-          <main className="safe-bottom min-h-screen">
+          <Navbar />
+          <main className="min-h-screen pt-16">
             {children}
           </main>
-          <BottomNav />
         </PrivyWrapper>
       </body>
     </html>

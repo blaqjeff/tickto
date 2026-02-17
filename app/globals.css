@@ -3,19 +3,23 @@
 /* ===== Glass House Design System ===== */
 :root {
   /* Core colors */
-  --background: #09090b; /* zinc-950 */
+  --background: #09090b;
+  /* zinc-950 */
   --foreground: #fafafa;
-  
+
   /* Glass effects */
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-blur: 40px;
-  
+
   /* Brand colors */
-  --primary: #c084fc; /* purple-400 */
+  --primary: #c084fc;
+  /* purple-400 */
   --primary-glow: rgba(192, 132, 252, 0.5);
-  --success: #34d399; /* emerald-400 */
-  --destructive: #fb7185; /* rose-400 */
+  --success: #34d399;
+  /* emerald-400 */
+  --destructive: #fb7185;
+  /* rose-400 */
 }
 
 @theme inline {
@@ -23,7 +27,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  
+
   /* Glass House tokens */
   --color-glass-bg: var(--glass-bg);
   --color-glass-border: var(--glass-border);
@@ -56,6 +60,19 @@ body {
     radial-gradient(ellipse 50% 50% at 90% 70%, #8b5cf6 0%, transparent 50%);
 }
 
+/* ===== Top Navbar ===== */
+.top-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(9, 9, 11, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--glass-border);
+  z-index: 50;
+}
+
 /* ===== Glass Card Styles ===== */
 .glass-card {
   background: var(--glass-bg);
@@ -66,6 +83,19 @@ body {
   box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Desktop Card Hover Enhancement ===== */
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(192, 132, 252, 0.3);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(192, 132, 252, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /* Ticket rip cutouts using clip-path */
@@ -121,31 +151,6 @@ body {
   inset: 0;
 }
 
-/* ===== Bottom Navigation ===== */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid var(--glass-border);
-  z-index: 50;
-}
-
-.fab-button {
-  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-  box-shadow:
-    0 0 20px var(--primary-glow),
-    0 4px 20px rgba(0, 0, 0, 0.3);
-  transform: translateY(-12px);
-}
-
-.fab-button:active {
-  transform: translateY(-10px) scale(0.95);
-}
-
 /* ===== Swipe Button ===== */
 .swipe-track {
   background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
@@ -162,9 +167,12 @@ body {
 
 /* ===== Animations ===== */
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px var(--primary-glow);
   }
+
   50% {
     box-shadow: 0 0 40px var(--primary-glow);
   }
@@ -178,18 +186,17 @@ body {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
 
 .shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
@@ -202,9 +209,4 @@ body {
 
 .mono {
   font-family: var(--font-mono), monospace;
-}
-
-/* ===== Safe area for mobile ===== */
-.safe-bottom {
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }

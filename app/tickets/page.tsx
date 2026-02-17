@@ -272,7 +272,7 @@ export default function TicketsPage() {
     }, [ready, authenticated, user]);
 
     return (
-        <div className="px-4 py-6 max-w-lg mx-auto">
+        <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto">
             {/* Header */}
             <motion.header
                 className="mb-8"
@@ -280,7 +280,7 @@ export default function TicketsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <h1 className="heading text-3xl text-white mb-1">My Tickets</h1>
+                <h1 className="heading text-3xl md:text-4xl text-white mb-1">My Tickets</h1>
                 <p className="text-white/50">
                     {tickets.length > 0 ? `${tickets.length} tickets in your wallet` : 'Your digital ticket wallet'}
                 </p>
@@ -293,7 +293,7 @@ export default function TicketsPage() {
                 <SignInPrompt onSignIn={login} />
             ) : tickets.length > 0 ? (
                 <motion.div
-                    className="grid gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     variants={container}
                     initial="hidden"
                     animate="show"

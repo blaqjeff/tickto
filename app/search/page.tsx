@@ -1,8 +1,10 @@
+'use client';
+
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Calendar, MapPin, Loader2 } from 'lucide-react';
+import { Search, X, Calendar, MapPin, Loader2, Sparkles } from 'lucide-react';
 import { formatDate, formatTime } from '@/lib/mock-data';
 import { getEvents } from '@/lib/api';
 import { Event, EventCategory } from '@/lib/types';
@@ -16,7 +18,15 @@ const categoryFilters: { label: string; value: EventCategory | 'all' }[] = [
     { label: 'Nightlife', value: 'nightlife' },
 ];
 
-function EventResult({ event }: { event: Event }) {
+const categoryColors: Record<EventCategory, string> = {
+    music: 'bg-purple-500/20 text-purple-400',
+    sports: 'bg-emerald-500/20 text-emerald-400',
+    arts: 'bg-pink-500/20 text-pink-400',
+    conference: 'bg-blue-500/20 text-blue-400',
+    nightlife: 'bg-orange-500/20 text-orange-400',
+};
+
+function EventResultCard({ event }: { event: Event }) {
     // Get price - support tiers
     const minPrice = event.tiers && event.tiers.length > 0
         ? Math.min(...event.tiers.map((t) => t.price))
@@ -35,38 +45,48 @@ function EventResult({ event }: { event: Event }) {
     return (
         <Link href={`/event/${event.id}`}>
             <motion.div
-                className="glass-card p-4 flex gap-4"
+                className="glass-card glass-card-hover overflow-hidden group h-full flex flex-col"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
             >
-                {/* Thumbnail */}
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+                {/* Cover Image */}
+                <div className="relative h-44 overflow-hidden">
                     <Image
                         src={imageSrc}
                         alt={event.title}
                         fill
-                        className="object-cover"
-                        sizes="80px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+
+                    {/* Category Badge */}
+                    <span
+                        className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md ${categoryColors[event.category] || 'bg-white/20 text-white'
+                            }`}
+                    >
+                        {event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'}
+                    </span>
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
-                    <h3 className="heading text-white text-base mb-1 line-clamp-1">
+                <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="heading text-white text-lg mb-2 line-clamp-1">
                         {event.title}
                     </h3>
-                    <div className="flex items-center gap-1 text-xs text-white/60 mb-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(event.date)} · {formatTime(event.date || event.time)}</span>
+                    <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
+                        <Calendar className="w-4 h-4 shrink-0" />
+                        <span className="line-clamp-1">{formatDate(event.date)} · {formatTime(event.date || event.time)}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-white/50">
-                        <MapPin className="w-3 h-3" />
+                    <div className="flex items-center gap-2 text-sm text-white/50">
+                        <MapPin className="w-4 h-4 shrink-0" />
                         <span className="line-clamp-1">{event.location || event.venue || 'Location TBA'}</span>
                     </div>
-                    <div className="mt-2 text-right">
+                    <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
+                        <span className="text-xs text-white/40">Price</span>
                         <span className="mono text-purple-400 text-sm font-semibold">
                             {priceLabel}
                         </span>
@@ -111,17 +131,17 @@ export default function SearchPage() {
     }, [events, query, selectedCategory]);
 
     return (
-        <div className="px-4 py-6 max-w-lg mx-auto min-h-screen">
+        <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto min-h-screen">
             {/* Search Header */}
             <motion.div
-                className="mb-6"
+                className="mb-8"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <h1 className="heading text-3xl text-white mb-4">Search</h1>
+                <h1 className="heading text-3xl md:text-4xl text-white mb-4">Search</h1>
 
                 {/* Search Input */}
-                <div className="relative">
+                <div className="relative max-w-2xl">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2">
                         <Search className="w-5 h-5 text-white/40" />
                     </div>
@@ -146,7 +166,7 @@ export default function SearchPage() {
 
             {/* Category Filters */}
             <motion.div
-                className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide"
+                className="flex gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
@@ -165,8 +185,8 @@ export default function SearchPage() {
                 ))}
             </motion.div>
 
-            {/* Results */}
-            <div className="space-y-4 pb-20">
+            {/* Results - Responsive Grid */}
+            <div>
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
@@ -175,12 +195,14 @@ export default function SearchPage() {
                 ) : (
                     <AnimatePresence mode="popLayout">
                         {filteredEvents.length > 0 ? (
-                            filteredEvents.map((event) => (
-                                <EventResult key={event.id} event={event} />
-                            ))
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredEvents.map((event) => (
+                                    <EventResultCard key={event.id} event={event} />
+                                ))}
+                            </div>
                         ) : (
                             <motion.div
-                                className="glass-card p-12 text-center"
+                                className="glass-card p-12 text-center max-w-md mx-auto"
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                             >

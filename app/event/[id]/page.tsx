@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calendar, MapPin, Check, Loader2, Plus, Minus, Ticket } from 'lucide-react';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
+import { useWallets } from '@privy-io/react-auth/solana';
 import { SwipeButton } from '@/components/ui/SwipeButton';
 import { ConfettiEffect } from '@/components/ui/ConfettiEffect';
 import { formatDate, formatTime } from '@/lib/mock-data';
@@ -49,7 +50,7 @@ const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.de
 export default function EventPage({ params }: EventPageProps) {
     const { id } = use(params);
     const router = useRouter();
-    const { ready, authenticated, user, login, createWallet } = usePrivy();
+    const { ready, authenticated, user, login } = usePrivy();
     const { wallets } = useWallets();
 
     const [event, setEvent] = useState<Event | null>(null);
@@ -137,35 +138,12 @@ export default function EventPage({ params }: EventPageProps) {
             return;
         }
 
-        // Match by address is the most robust way for embedded wallets
+        // Privy v3: `wallets` from `@privy-io/react-auth/solana` contains ONLY Solana wallets
+        console.log("Solana wallets:", wallets.length, wallets.map(w => w.address?.slice(0, 8)));
+
+        // Pick the wallet matching the user's primary address, or just the first one
         const targetAddress = user?.wallet?.address;
-
-        console.log("Purchase Debug Full:", JSON.stringify(wallets, (key, value) =>
-            (key === 'provider' || key === 'ethereum') ? '...' : value
-            , 2));
-
-        // 1. FILTER: strictly get only Solana wallets first (ignore EVM)
-        // Check for chainType 'solana' (mostly for embedded) OR walletClientType 'solana' (external)
-        const allSolanaWallets = wallets.filter(w => (w as any).chainType === 'solana' || w.walletClientType === 'solana');
-        console.log("Filtered Solana Wallets:", allSolanaWallets.length);
-
-        // 2. FIND: Try to find the one that matches the user's primary address (if it's a Solana address)
-        // 3. FALLBACK: Use the first available Solana wallet
-        let solanaWallet = allSolanaWallets.find(w => w.address === targetAddress) || allSolanaWallets[0];
-
-        // 4. CREATE/RECOVER: If no active Solana wallet found, try to create/active one (idempotent for embedded)
-        if (!solanaWallet) {
-            console.log("No active Solana wallet found. Attempting to retrieve embedded Solana wallet...");
-            try {
-                const wallet = await createWallet({ chainType: 'solana' });
-                if (wallet) {
-                    console.log("Successfully retrieved Solana wallet:", wallet.address);
-                    solanaWallet = wallet as any;
-                }
-            } catch (err) {
-                console.error("Failed to create/retrieve Solana wallet:", err);
-            }
-        }
+        const solanaWallet = wallets.find(w => w.address === targetAddress) || wallets[0];
 
         if (!solanaWallet?.address) {
             console.error("Critical: No signing wallet found in 'wallets' array.");
@@ -226,20 +204,9 @@ export default function EventPage({ params }: EventPageProps) {
                 transaction.recentBlockhash = blockhash;
                 transaction.feePayer = new PublicKey(solanaWallet.address);
 
-                // Get the wallet provider and sign/send transaction
-                const provider = await solanaWallet.getEthereumProvider();
-
-                // For Solana wallets, we need to use the native signAndSendTransaction
-                // This depends on the wallet adapter - for embedded wallets, use Privy's method
-                if (solanaWallet.walletClientType === 'privy') {
-                    // For Privy embedded wallets
-                    const signedTx = await (provider as any).signTransaction(transaction);
-                    signature = await connection.sendRawTransaction(signedTx.serialize());
-                } else {
-                    // For external wallets (Phantom, etc.)
-                    const signedTx = await (provider as any).signAndSendTransaction(transaction);
-                    signature = signedTx.signature;
-                }
+                // Use the Solana wallet's native signing method (works for both embedded & external)
+                const signedTx = await (solanaWallet as any).signTransaction(transaction);
+                signature = await connection.sendRawTransaction(signedTx.serialize());
 
                 console.log("Payment sent! Signature:", signature);
 

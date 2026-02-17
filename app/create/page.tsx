@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
+import { useWallets } from '@privy-io/react-auth/solana';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Upload, Calendar, MapPin, Tag, Plus, Trash2, Ticket } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
@@ -91,9 +92,8 @@ export default function CreateEventPage() {
         setIsLoading(true);
 
         try {
-            // 2. Fallback: Use embedded wallet if external one isn't connected
-            // Fallback to user.wallet if wallets[0] is empty (fixes social login issue)
-            const organizerWallet = user?.wallet?.address || wallets[0]?.address;
+            // 2. Use Solana wallet address (from @privy-io/react-auth/solana hook)
+            const organizerWallet = wallets[0]?.address;
 
             if (!organizerWallet) {
                 alert("Error: No wallet address found on your account. Please sign in again.");
