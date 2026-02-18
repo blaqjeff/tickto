@@ -19,7 +19,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-ga',
                 name: 'General Admission',
                 price: 75,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 250,
                 maxPerUser: 4,
                 perks: ['Festival access', 'Commemorative NFT'],
@@ -28,7 +28,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-vip',
                 name: 'VIP Experience',
                 price: 200,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 50,
                 maxPerUser: 2,
                 perks: ['Priority entry', 'VIP lounge access', 'Exclusive merch', 'Meet & greet'],
@@ -51,7 +51,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-standard',
                 name: 'Standard Entry',
                 price: 35,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 100,
                 maxPerUser: 2,
                 perks: ['Exhibition access', 'Digital catalog'],
@@ -60,7 +60,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-collector',
                 name: 'Collector Pass',
                 price: 150,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 20,
                 maxPerUser: 1,
                 perks: ['Private viewing', 'Artist reception', 'Limited edition print'],
@@ -83,7 +83,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-builder',
                 name: 'Builder Pass',
                 price: 250,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 300,
                 maxPerUser: 1,
                 perks: ['Full conference access', 'Workshop sessions', 'Networking events'],
@@ -92,7 +92,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-sponsor',
                 name: 'Sponsor Badge',
                 price: 1000,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 25,
                 maxPerUser: 1,
                 perks: ['Everything in Builder', 'Speaking slot', 'Recruiting booth', 'VIP dinner'],
@@ -115,7 +115,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-entry',
                 name: 'Entry',
                 price: 50,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 150,
                 maxPerUser: 2,
                 perks: ['Rooftop access', 'Welcome drink'],
@@ -124,7 +124,7 @@ export const mockEvents: Event[] = [
                 id: 'tier-table',
                 name: 'Table Service',
                 price: 500,
-                currency: 'USDC',
+                currency: 'USD',
                 available: 10,
                 maxPerUser: 1,
                 perks: ['Reserved table for 6', 'Bottle service', 'Personal host'],
@@ -221,7 +221,7 @@ export function formatTime(timeInput: string | null | undefined): string {
         const parts = timeInput.split(':');
         const hours = parseInt(parts[0], 10);
         const minutes = parts[1].substring(0, 2);
-        
+
         if (!isNaN(hours)) {
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const displayHour = hours % 12 || 12;

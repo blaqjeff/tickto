@@ -145,12 +145,11 @@ export default function CreateEventPage() {
                 description: formData.description,
                 date: eventDate.toISOString(), // Safe now because we checked it above
                 location: formData.location,
-                price_sol: lowestPrice,
+                price_usd: lowestPrice,
                 total_tickets: totalTickets,
                 image_url: publicUrl,
                 owner_id: user.id,
                 organizer_wallet: organizerWallet,
-                price_usdc: lowestPrice * 150, // Keep for legacy, but UI should default to SOL
                 ticket_tiers: numericTiers
             };
 
@@ -295,11 +294,11 @@ export default function CreateEventPage() {
                                         </div>
                                         <div className="col-span-5 md:col-span-3">
                                             <div className="relative">
-                                                <span className="absolute left-0 bottom-1 text-white/30 text-xs">SOL</span>
+                                                <span className="absolute left-0 bottom-1 text-white/30 text-xs">$</span>
                                                 <input
                                                     type="number"
-                                                    placeholder="Price"
-                                                    step="0.001"
+                                                    placeholder="Price (USD)"
+                                                    step="0.01"
                                                     min="0"
                                                     value={tier.price}
                                                     onChange={e => updateTier(index, 'price', e.target.value)}

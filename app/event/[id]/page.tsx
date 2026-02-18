@@ -15,6 +15,7 @@ import { getEventById } from '@/lib/api';
 import { supabase } from '@/lib/supabaseClient';
 import { Event, TransactionState } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { formatUSD, usdToSol, formatSOL, getSolPrice } from '@/lib/jupiter';
 import {
     Connection,
     PublicKey,
@@ -35,14 +36,7 @@ interface TierOption {
     description: string;
 }
 
-/**
- * Format price for display - SOL
- */
-function formatPriceSol(price: number | undefined | null): string {
-    if (price === undefined || price === null) return 'Price TBA';
-    if (price === 0) return 'Free';
-    return `${price} SOL`;
-}
+// formatUSD is imported from '@/lib/jupiter'
 
 // Solana RPC endpoint (use environment variable with devnet fallback)
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
@@ -62,6 +56,8 @@ export default function EventPage({ params }: EventPageProps) {
     const [showConfetti, setShowConfetti] = useState(false);
     const [purchasing, setPurchasing] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [solEquivalent, setSolEquivalent] = useState<string | null>(null);
+    const [solPriceLoading, setSolPriceLoading] = useState(false);
 
     // Fetch event from Supabase
     useEffect(() => {
@@ -87,7 +83,7 @@ export default function EventPage({ params }: EventPageProps) {
 
     // Build tier options from event data
     function getTiers(eventData: Event): TierOption[] {
-        const basePrice = eventData.price_sol || 0;
+        const basePrice = eventData.price_usd || 0;
 
         // If event has tiers, use them
         if (eventData.tiers && eventData.tiers.length > 0) {
@@ -110,8 +106,28 @@ export default function EventPage({ params }: EventPageProps) {
         ];
     }
 
-    // Calculate total price
+    // Calculate total price (USD)
     const totalPrice = selectedTier ? selectedTier.price * quantity : 0;
+
+    // Fetch SOL equivalent when price or quantity changes
+    useEffect(() => {
+        async function fetchSolEquivalent() {
+            if (totalPrice === 0) {
+                setSolEquivalent(null);
+                return;
+            }
+            setSolPriceLoading(true);
+            try {
+                const solAmount = await usdToSol(totalPrice);
+                setSolEquivalent(formatSOL(solAmount));
+            } catch {
+                setSolEquivalent(null);
+            } finally {
+                setSolPriceLoading(false);
+            }
+        }
+        fetchSolEquivalent();
+    }, [totalPrice]);
 
     // Quantity controls
     const increaseQuantity = () => {
@@ -158,8 +174,10 @@ export default function EventPage({ params }: EventPageProps) {
         setTxState('processing');
 
         try {
-            // Calculate lamports (1 SOL = 1,000,000,000 lamports)
-            const lamports = Math.floor(totalPrice * LAMPORTS_PER_SOL);
+            // Convert USD price to SOL using Jupiter Price API
+            const solAmount = await usdToSol(totalPrice);
+            const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);
+            console.log(`USD $${totalPrice} → ${solAmount} SOL (${lamports} lamports)`);
 
             // Skip transaction for free tickets
             let signature = 'free-ticket';
@@ -393,7 +411,7 @@ export default function EventPage({ params }: EventPageProps) {
                                     <div className="flex items-center justify-between mb-1">
                                         <h3 className="font-medium text-white">{tier.name}</h3>
                                         <span className="mono text-lg text-purple-400 font-semibold">
-                                            {tier.price === 0 ? 'Free' : `${tier.price} SOL`}
+                                            {formatUSD(tier.price)}
                                         </span>
                                     </div>
                                     {tier.description && (
@@ -444,8 +462,13 @@ export default function EventPage({ params }: EventPageProps) {
                             <div className="text-right">
                                 <p className="text-xs text-white/50 mb-1">Total</p>
                                 <p className="mono text-2xl text-purple-400 font-bold">
-                                    {formatPriceSol(totalPrice)}
+                                    {formatUSD(totalPrice)}
                                 </p>
+                                {solEquivalent && (
+                                    <p className="text-xs text-white/40 mt-0.5">
+                                        {solPriceLoading ? '...' : `≈ ${solEquivalent}`}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -495,7 +518,7 @@ export default function EventPage({ params }: EventPageProps) {
                                 ) : (
                                     <SwipeButton
                                         onComplete={handlePurchase}
-                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${(selectedTier?.price! * quantity).toFixed(3)} SOL`}
+                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${formatUSD(selectedTier?.price! * quantity)}`}
                                     />
                                 )}
                             </motion.div>

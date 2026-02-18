@@ -30,11 +30,11 @@ function EventResultCard({ event }: { event: Event }) {
     // Get price - support tiers
     const minPrice = event.tiers && event.tiers.length > 0
         ? Math.min(...event.tiers.map((t) => t.price))
-        : (event.priceUsdc || event.price_sol || 0);
+        : (event.price_usd || 0);
 
     const priceLabel = minPrice === 0
         ? 'Free'
-        : `${minPrice} SOL`;
+        : `$${minPrice.toFixed(2)}`;
 
     // Image fallback
     const eventAny = event as any;

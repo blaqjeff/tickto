@@ -12,8 +12,7 @@ export interface Event {
     description: string;
     organizer: string;
     featured?: boolean;
-    priceUsdc?: number; // USD price for the event
-    price_sol?: number; // SOL price
+    price_usd?: number; // USD price (lowest tier price)
     total_tickets?: number;
     owner_id?: string;
     organizer_wallet?: string; // Solana address for receiving payments
@@ -29,8 +28,8 @@ export type EventCategory =
 export interface TicketTier {
     id: string;
     name: string;
-    price: number;
-    currency: 'USDC';
+    price: number; // Price in USD
+    currency: 'USD';
     available: number;
     maxPerUser: number;
     perks: string[];
