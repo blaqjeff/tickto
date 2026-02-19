@@ -1,0 +1,25 @@
+[package]
+name = "tickto_tickets"
+version = "0.1.0"
+description = "cNFT ticketing program using Metaplex Bubblegum V2"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "tickto_tickets"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+mpl-bubblegum = "2.1.1"
+spl-account-compression = { version = "1.0", features = ["no-entrypoint"] }
+blake3 = "=1.5.5"
+base64ct = "=1.6.0"
