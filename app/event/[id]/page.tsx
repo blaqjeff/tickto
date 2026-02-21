@@ -565,7 +565,7 @@ export default function EventPage({ params }: EventPageProps) {
                                     </button>
                                 ) : (
                                     <SwipeButton
-                                        onComplete={totalQuantity > 0 ? handlePurchase : undefined}
+                                        onComplete={totalQuantity > 0 ? handlePurchase : async () => { }}
                                         label={purchasing ? 'Processing...' : (totalQuantity === 0 ? 'Select Tickets to Buy' : `Buy ${totalQuantity} Ticket${totalQuantity > 1 ? 's' : ''} - ${formatUSD(totalPrice)}`)}
                                     />
                                 )}
