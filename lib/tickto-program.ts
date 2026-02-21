@@ -7,8 +7,8 @@ import {
     BN
 } from "@coral-xyz/anchor";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
-import { TicktoTickets } from "../tickto_tickets/target/types/tickto_tickets";
-import TICKTO_IDL from "../tickto_tickets/target/idl/tickto_tickets.json";
+import { TicktoTickets } from "./idl/tickto_tickets";
+import TICKTO_IDL from "./idl/tickto_tickets.json";
 
 
 // Program ID from lib.rs
