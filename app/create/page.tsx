@@ -227,12 +227,12 @@ export default function CreateEventPage() {
     return (
         <div className="px-4 py-8 max-w-2xl mx-auto min-h-screen safe-bottom">
             <motion.header
-                className="mb-8 text-center"
-                initial={{ opacity: 0, y: -20 }}
+                className="mb-6"
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <h1 className="heading text-3xl text-white mb-2">Create New Event</h1>
-                <p className="text-white/50">Details, tickets, and artwork.</p>
+                <h1 className="heading text-2xl text-white mb-1">Create New Event</h1>
+                <p className="text-white/40 text-sm">Details, tickets, and artwork.</p>
             </motion.header>
 
             <motion.form
@@ -244,7 +244,7 @@ export default function CreateEventPage() {
             >
                 {/* Image Upload */}
                 <div className="relative group">
-                    <label className="block w-full aspect-video rounded-3xl border-2 border-dashed border-white/20 hover:border-purple-500/50 transition-colors cursor-pointer overflow-hidden bg-white/5">
+                    <label className="block w-full aspect-video rounded-xl border-2 border-dashed border-white/10 hover:border-purple-500/40 transition-colors cursor-pointer overflow-hidden bg-white/3">
                         <input
                             type="file"
                             accept="image/*"

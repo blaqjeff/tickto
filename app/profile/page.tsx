@@ -64,27 +64,27 @@ function SettingsItem({
             onClick={handleClick}
             role={toggle ? undefined : "button"}
             tabIndex={toggle ? undefined : 0}
-            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors cursor-pointer ${danger
-                ? 'bg-red-500/10 hover:bg-red-500/20'
-                : 'bg-white/5 hover:bg-white/10'
+            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer ${danger
+                ? 'bg-red-500/8 hover:bg-red-500/15'
+                : 'bg-white/3 hover:bg-white/6'
                 }`}
         >
             <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${danger ? 'bg-red-500/20' : 'bg-purple-500/20'
+                className={`w-9 h-9 rounded-lg flex items-center justify-center ${danger ? 'bg-red-500/15' : 'bg-purple-500/12'
                     }`}
             >
-                <Icon className={`w-5 h-5 ${danger ? 'text-red-400' : 'text-purple-400'}`} />
+                <Icon className={`w-4 h-4 ${danger ? 'text-red-400' : 'text-purple-400'}`} />
             </div>
             <div className="flex-1 text-left">
-                <span className={`block text-sm font-medium ${danger ? 'text-red-400' : 'text-white'}`}>
+                <span className={`block text-[13px] font-medium ${danger ? 'text-red-400' : 'text-white'}`}>
                     {label}
                 </span>
-                {value && <span className="block text-xs text-white/40">{value}</span>}
+                {value && <span className="block text-[11px] text-white/30">{value}</span>}
             </div>
             {toggle ? (
                 <ToggleSwitch enabled={toggle.enabled} onToggle={toggle.onToggle} />
             ) : (
-                <ChevronRight className="w-5 h-5 text-white/30" />
+                <ChevronRight className="w-4 h-4 text-white/20" />
             )}
         </div>
     );
@@ -145,29 +145,29 @@ export default function ProfilePage() {
         return (
             <div className="px-4 py-6 max-w-lg mx-auto min-h-screen flex flex-col">
                 <motion.header
-                    className="mb-8"
-                    initial={{ opacity: 0, y: -20 }}
+                    className="mb-6"
+                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <h1 className="heading text-3xl text-white mb-1">Profile</h1>
-                    <p className="text-white/50">Sign in to manage your account</p>
+                    <h1 className="heading text-2xl text-white mb-1">Profile</h1>
+                    <p className="text-white/40 text-sm">Sign in to manage your account</p>
                 </motion.header>
 
                 <motion.div
-                    className="glass-card p-12 text-center flex-1 flex flex-col items-center justify-center"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    className="glass-card p-10 text-center flex-1 flex flex-col items-center justify-center"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                 >
-                    <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-6">
-                        <User className="w-10 h-10 text-purple-400" />
+                    <div className="w-14 h-14 rounded-xl bg-purple-500/12 flex items-center justify-center mx-auto mb-4">
+                        <User className="w-7 h-7 text-purple-400" />
                     </div>
-                    <h3 className="heading text-xl text-white mb-2">Welcome to Tickto</h3>
-                    <p className="text-white/50 text-sm mb-8">
+                    <h3 className="heading text-lg text-white mb-1">Welcome to Tickto</h3>
+                    <p className="text-white/40 text-sm mb-6">
                         Connect your wallet or sign in with email to get started.
                     </p>
                     <button
                         onClick={login}
-                        className="px-8 py-4 rounded-full bg-purple-500 hover:bg-purple-600 transition-colors text-white font-medium"
+                        className="px-6 py-3 rounded-xl bg-purple-500 hover:bg-purple-400 transition-colors text-white text-sm font-medium"
                     >
                         Sign In
                     </button>
@@ -180,55 +180,55 @@ export default function ProfilePage() {
         <div className="px-4 py-6 max-w-lg mx-auto">
             {/* Header */}
             <motion.header
-                className="mb-8"
-                initial={{ opacity: 0, y: -20 }}
+                className="mb-6"
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <h1 className="heading text-3xl text-white mb-1">Profile</h1>
-                <p className="text-white/50">Manage your account</p>
+                <h1 className="heading text-2xl text-white mb-1">Profile</h1>
+                <p className="text-white/40 text-sm">Manage your account</p>
             </motion.header>
 
             {/* Profile Card */}
             <motion.div
-                className="glass-card p-6 mb-8"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card p-5 mb-6"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
             >
                 {/* Avatar & Name */}
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-2xl font-bold">
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-14 h-14 rounded-xl bg-purple-500 flex items-center justify-center text-white text-xl font-bold">
                         {displayName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h2 className="heading text-xl text-white">{displayName}</h2>
+                        <h2 className="heading text-lg text-white">{displayName}</h2>
                         <button
                             onClick={handleCopyAddress}
-                            className="flex items-center gap-2 text-white/50 text-sm hover:text-white/70 transition-colors"
+                            className="flex items-center gap-1.5 text-white/40 text-[13px] hover:text-white/60 transition-colors"
                         >
                             <span className="mono">{walletAddress}</span>
                             {copied ? (
-                                <Check className="w-4 h-4 text-emerald-400" />
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
                             ) : (
-                                <Copy className="w-4 h-4" />
+                                <Copy className="w-3.5 h-3.5" />
                             )}
                         </button>
                     </div>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-white/5 text-center">
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-white/4 text-center">
                         {loadingTickets ? (
-                            <Loader2 className="w-6 h-6 text-purple-400 mx-auto animate-spin" />
+                            <Loader2 className="w-5 h-5 text-purple-400 mx-auto animate-spin" />
                         ) : (
-                            <p className="mono text-2xl text-purple-400 font-bold">{ticketCount}</p>
+                            <p className="mono text-xl text-purple-400 font-bold">{ticketCount}</p>
                         )}
-                        <p className="text-xs text-white/50">Tickets Owned</p>
+                        <p className="text-[11px] text-white/30">Tickets Owned</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 text-center">
-                        <p className="mono text-2xl text-emerald-400 font-bold">0</p>
-                        <p className="text-xs text-white/50">Events Attended</p>
+                    <div className="p-3 rounded-lg bg-white/4 text-center">
+                        <p className="mono text-xl text-emerald-400 font-bold">0</p>
+                        <p className="text-[11px] text-white/30">Events Attended</p>
                     </div>
                 </div>
             </motion.div>
@@ -239,8 +239,8 @@ export default function ProfilePage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
             >
-                <h3 className="heading text-lg text-white mb-4">Settings</h3>
-                <div className="space-y-3">
+                <h3 className="heading text-base text-white mb-3">Settings</h3>
+                <div className="flex flex-col gap-2">
                     <SettingsItem
                         icon={Bell}
                         label="Notifications"
@@ -288,12 +288,12 @@ export default function ProfilePage() {
 
             {/* Version */}
             <motion.p
-                className="text-center text-white/20 text-xs mt-8"
+                className="text-center text-white/15 text-[11px] mt-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
             >
-                Tickto v1.0.0 • Built with Next.js 15
+                Tickto v1.0.0
             </motion.p>
         </div>
     );

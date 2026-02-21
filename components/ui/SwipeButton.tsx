@@ -140,7 +140,7 @@ export function SwipeButton({
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', damping: 15 }}
                 >
-                    <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-xl bg-emerald-500 flex items-center justify-center">
                         <Check className="w-8 h-8 text-white" />
                     </div>
                 </motion.div>

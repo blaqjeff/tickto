@@ -72,11 +72,11 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
 
     return (
         <GlassCard
-            className="h-[360px]"
+            className="h-[340px]"
             frontContent={
                 <div className="flex flex-col h-full">
                     {/* Cover Image */}
-                    <div className="relative h-28 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-[28px]">
+                    <div className="relative h-24 -mx-5 -mt-5 mb-3 overflow-hidden rounded-t-[14px]">
                         <Image
                             src={coverImage}
                             alt={eventTitle}
@@ -87,44 +87,44 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
                         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 to-transparent" />
 
                         {/* Status Badge */}
-                        <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 backdrop-blur-md">
-                            {status.toUpperCase()}
+                        <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-500/20 text-emerald-400 backdrop-blur-md uppercase tracking-wide">
+                            {status}
                         </div>
                     </div>
 
                     {/* Event Info */}
                     <div className="flex-1">
-                        <h3 className="heading text-lg text-white mb-2 line-clamp-1">
+                        <h3 className="heading text-[15px] text-white mb-2 line-clamp-1">
                             {eventTitle}
                         </h3>
 
-                        <div className="space-y-2 mb-4">
-                            <div className="flex items-center gap-2 text-sm text-white/60">
-                                <Calendar className="w-4 h-4 text-purple-400" />
+                        <div className="flex flex-col gap-1.5 mb-3">
+                            <div className="flex items-center gap-2 text-[13px] text-white/50">
+                                <Calendar className="w-3.5 h-3.5 text-purple-400" />
                                 <span>
                                     {formatDate(eventDate)} · {formatTime(eventTime)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-white/60">
-                                <MapPin className="w-4 h-4 text-purple-400" />
+                            <div className="flex items-center gap-2 text-[13px] text-white/50">
+                                <MapPin className="w-3.5 h-3.5 text-purple-400" />
                                 <span>{eventVenue}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Tier Badge */}
-                    <div className="pt-4 border-t border-white/10">
+                    <div className="pt-3 border-t border-white/6">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-white/50">Tier</span>
+                            <span className="text-[11px] text-white/30 uppercase tracking-wide">Tier</span>
                             <span className="text-sm font-medium text-purple-400">{tierName}</span>
                         </div>
                     </div>
 
                     {/* Tap Hint */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
                         <motion.div
-                            className="flex items-center gap-2 text-xs text-white/40"
-                            animate={{ opacity: [0.4, 0.8, 0.4] }}
+                            className="flex items-center gap-1.5 text-[11px] text-white/30"
+                            animate={{ opacity: [0.3, 0.7, 0.3] }}
                             transition={{ repeat: Infinity, duration: 2 }}
                         >
                             <QrCode className="w-3 h-3" />
@@ -136,30 +136,30 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
             backContent={
                 <div className="flex flex-col items-center justify-center h-full">
                     {/* QR Code Placeholder */}
-                    <div className="w-36 h-36 bg-white rounded-2xl p-3 mb-3">
-                        <div className="w-full h-full bg-zinc-900 rounded-xl flex items-center justify-center">
-                            <QrCode className="w-16 h-16 text-white" />
+                    <div className="w-32 h-32 bg-white rounded-xl p-2.5 mb-3">
+                        <div className="w-full h-full bg-zinc-900 rounded-lg flex items-center justify-center">
+                            <QrCode className="w-14 h-14 text-white" />
                         </div>
                     </div>
 
                     {/* Ticket Code */}
-                    <p className="mono text-sm text-white/80 mb-1">{qrCode}</p>
-                    <p className="text-xs text-white/40 mb-4">Token ID: #{tokenId}</p>
+                    <p className="mono text-sm text-white/70 mb-0.5">{qrCode}</p>
+                    <p className="text-[11px] text-white/30 mb-4">Token ID: #{tokenId}</p>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 w-full px-2">
+                    <div className="flex gap-2 w-full px-1">
                         <button
                             onClick={handleTransfer}
-                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/10 hover:bg-white/20 transition-colors text-white text-sm font-medium"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/8 hover:bg-white/15 transition-colors text-white text-[13px] font-medium"
                         >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-3.5 h-3.5" />
                             Transfer
                         </button>
                         <button
                             onClick={handleSell}
-                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 transition-colors text-red-300 text-sm font-medium"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 transition-colors text-red-300 text-[13px] font-medium"
                         >
-                            <Banknote className="w-4 h-4" />
+                            <Banknote className="w-3.5 h-3.5" />
                             Sell
                         </button>
                     </div>
@@ -167,8 +167,8 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
                     {/* Tap Hint */}
                     <div className="absolute bottom-3">
                         <motion.span
-                            className="text-xs text-white/40"
-                            animate={{ opacity: [0.4, 0.8, 0.4] }}
+                            className="text-[11px] text-white/30"
+                            animate={{ opacity: [0.3, 0.7, 0.3] }}
                             transition={{ repeat: Infinity, duration: 2 }}
                         >
                             Tap to flip back
@@ -197,20 +197,20 @@ function LoadingState() {
 function EmptyState() {
     return (
         <motion.div
-            className="glass-card p-12 text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card p-10 text-center max-w-sm mx-auto"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
         >
-            <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                <Ticket className="w-10 h-10 text-purple-400" />
+            <div className="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center mx-auto mb-3">
+                <Ticket className="w-7 h-7 text-purple-400" />
             </div>
-            <h3 className="heading text-xl text-white mb-2">No Tickets Yet</h3>
-            <p className="text-white/50 text-sm mb-6">
+            <h3 className="heading text-lg text-white mb-1">No Tickets Yet</h3>
+            <p className="text-white/40 text-sm mb-5">
                 Your NFT tickets will appear here after purchase.
             </p>
             <a
                 href="/"
-                className="inline-block px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                className="inline-block px-5 py-2.5 rounded-xl bg-purple-500 text-white text-sm font-medium hover:bg-purple-400 transition-colors"
             >
                 Browse Events
             </a>
@@ -221,20 +221,20 @@ function EmptyState() {
 function SignInPrompt({ onSignIn }: { onSignIn: () => void }) {
     return (
         <motion.div
-            className="glass-card p-12 text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card p-10 text-center max-w-sm mx-auto"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
         >
-            <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                <Ticket className="w-10 h-10 text-purple-400" />
+            <div className="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center mx-auto mb-3">
+                <Ticket className="w-7 h-7 text-purple-400" />
             </div>
-            <h3 className="heading text-xl text-white mb-2">Sign In Required</h3>
-            <p className="text-white/50 text-sm mb-6">
+            <h3 className="heading text-lg text-white mb-1">Sign In Required</h3>
+            <p className="text-white/40 text-sm mb-5">
                 Connect your wallet to view your tickets.
             </p>
             <button
                 onClick={onSignIn}
-                className="inline-block px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                className="inline-block px-5 py-2.5 rounded-xl bg-purple-500 text-white text-sm font-medium hover:bg-purple-400 transition-colors"
             >
                 Sign In
             </button>
@@ -276,12 +276,12 @@ export default function TicketsPage() {
             {/* Header */}
             <motion.header
                 className="mb-8"
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.4 }}
             >
                 <h1 className="heading text-3xl md:text-4xl text-white mb-1">My Tickets</h1>
-                <p className="text-white/50">
+                <p className="text-white/40 text-sm">
                     {tickets.length > 0 ? `${tickets.length} tickets in your wallet` : 'Your digital ticket wallet'}
                 </p>
             </motion.header>
@@ -293,7 +293,7 @@ export default function TicketsPage() {
                 <SignInPrompt onSignIn={login} />
             ) : tickets.length > 0 ? (
                 <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     variants={container}
                     initial="hidden"
                     animate="show"

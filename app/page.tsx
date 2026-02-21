@@ -51,21 +51,21 @@ function EventCard({ event }: { event: Event }) {
 
   return (
     <Link href={`/event/${event.id}`}>
-      <GlassCardSimple className="overflow-hidden group h-full flex flex-col glass-card-hover">
+      <GlassCardSimple className="overflow-hidden group h-full flex flex-col glass-card-hover p-0">
         {/* Cover Image */}
-        <div className="relative h-44 -mx-6 -mt-6 mb-4 overflow-hidden">
+        <div className="relative h-40 overflow-hidden">
           <Image
             src={imageSrc}
             alt={event.title}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-950/20 to-transparent" />
 
           {/* Category Badge */}
           <span
-            className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md ${categoryColors[event.category] || 'bg-white/20 text-white'
+            className={`absolute top-3 left-3 px-2.5 py-1 rounded-md text-[11px] font-medium backdrop-blur-md ${categoryColors[event.category] || 'bg-white/20 text-white'
               }`}
           >
             {event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'}
@@ -73,7 +73,7 @@ function EventCard({ event }: { event: Event }) {
 
           {/* Featured Badge */}
           {event.featured && (
-            <span className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/30 text-purple-300 backdrop-blur-md flex items-center gap-1">
+            <span className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-[11px] font-medium bg-purple-500/25 text-purple-300 backdrop-blur-md flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
               Featured
             </span>
@@ -81,30 +81,30 @@ function EventCard({ event }: { event: Event }) {
         </div>
 
         {/* Event Info */}
-        <div className="flex-1">
-          <h3 className="heading text-lg text-white mb-2 line-clamp-1">
+        <div className="flex-1 px-4 pt-3 pb-4">
+          <h3 className="heading text-[15px] text-white mb-2 line-clamp-1">
             {event.title}
           </h3>
 
-          <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
-            <Calendar className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-2 text-[13px] text-white/50 mb-1">
+            <Calendar className="w-3.5 h-3.5 shrink-0 text-white/30" />
             <span className="line-clamp-1">
               {formatDate(event.date)} · {formatTime(event.date || event.time)}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-white/60">
-            <MapPin className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-2 text-[13px] text-white/50">
+            <MapPin className="w-3.5 h-3.5 shrink-0 text-white/30" />
             <span className="line-clamp-1">{event.location || event.venue || 'Location TBA'}</span>
           </div>
-        </div>
 
-        {/* Price */}
-        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-          <span className="text-xs text-white/40">Price</span>
-          <span className="mono text-purple-400 font-semibold">
-            {priceLabel}
-          </span>
+          {/* Price */}
+          <div className="mt-3 pt-3 border-t border-white/6 flex items-center justify-between">
+            <span className="text-[11px] text-white/30 uppercase tracking-wide">Price</span>
+            <span className="mono text-sm text-purple-400 font-semibold">
+              {priceLabel}
+            </span>
+          </div>
         </div>
       </GlassCardSimple>
     </Link>
@@ -128,13 +128,13 @@ function LoadingState() {
 function EmptyState() {
   return (
     <motion.div
-      className="glass-card p-12 text-center max-w-md mx-auto"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      className="glass-card p-10 text-center max-w-sm mx-auto"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
     >
-      <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-      <h3 className="heading text-xl text-white mb-2">No Events Found</h3>
-      <p className="text-white/50 text-sm">
+      <Sparkles className="w-10 h-10 text-purple-400/60 mx-auto mb-3" />
+      <h3 className="heading text-lg text-white mb-1">No Events Found</h3>
+      <p className="text-white/40 text-sm">
         Try adjusting your search terms.
       </p>
     </motion.div>
@@ -188,25 +188,25 @@ export default function HomePage() {
     <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto">
       {/* Header & Search */}
       <motion.header
-        className="mb-8 space-y-6"
-        initial={{ opacity: 0, y: -20 }}
+        className="mb-8 flex flex-col gap-5"
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.4 }}
       >
         <div>
-          <h1 className="heading text-3xl md:text-4xl text-white mb-1">Discover Events</h1>
-          <p className="text-white/50">Find your next experience</p>
+          <h1 className="heading text-3xl md:text-5xl text-white mb-1 text-balance">Discover Events</h1>
+          <p className="text-white/40 text-sm">Find your next experience</p>
         </div>
 
         {/* Search Bar */}
-        <div className="relative max-w-2xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+        <div className="relative max-w-xl">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
             type="text"
             placeholder="Search events, artists, or venues..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all shadow-xl"
+            className="w-full bg-white/4 border border-white/8 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-purple-500/40 focus:bg-white/6 transition-all"
           />
         </div>
       </motion.header>
@@ -219,38 +219,38 @@ export default function HomePage() {
           {featuredEvent && !isSearching && (
             <motion.section
               className="mb-10"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
             >
               <Link href={`/event/${featuredEvent.id}`}>
                 <div className="glass-card glass-card-hover overflow-hidden relative group">
-                  <div className="relative h-64 md:h-80 lg:h-96">
+                  <div className="relative h-56 md:h-72 lg:h-80">
                     <Image
                       src={featuredEvent.coverImage || '/placeholder-event.jpg'}
                       alt={featuredEvent.title}
                       fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                       sizes="100vw"
                       priority
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
 
-                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/30 text-purple-300 backdrop-blur-md mb-3">
+                    <div className="absolute bottom-0 left-0 right-0 p-5 md:p-7">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium bg-purple-500/25 text-purple-300 backdrop-blur-md mb-3">
                         <Sparkles className="w-3 h-3" />
                         Featured Event
                       </span>
-                      <h2 className="heading text-2xl md:text-3xl lg:text-4xl text-white mb-2">
+                      <h2 className="heading text-xl md:text-2xl lg:text-3xl text-white mb-2 text-balance">
                         {featuredEvent.title}
                       </h2>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
+                      <div className="flex flex-wrap items-center gap-4 text-[13px] text-white/50">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5" />
                           {formatDate(featuredEvent.date)} · {formatTime(featuredEvent.date || featuredEvent.time)}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5" />
                           {featuredEvent.location || featuredEvent.venue || 'Location TBA'}
                         </span>
                       </div>
@@ -263,11 +263,11 @@ export default function HomePage() {
 
           {/* All Events - Responsive Grid */}
           <section>
-            <h2 className="heading text-xl text-white mb-6">
+            <h2 className="heading text-lg text-white mb-5">
               {isSearching ? 'Search Results' : 'Upcoming Events'}
             </h2>
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               variants={container}
               initial="hidden"
               animate="show"

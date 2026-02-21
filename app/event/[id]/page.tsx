@@ -349,14 +349,14 @@ export default function EventPage({ params }: EventPageProps) {
     if (!event) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen px-4">
-                <div className="glass-card p-12 text-center max-w-md">
-                    <h2 className="heading text-2xl text-white mb-2">Event Not Found</h2>
-                    <p className="text-white/50 mb-6">
-                        The event you're looking for doesn't exist or has been removed.
+                <div className="glass-card p-10 text-center max-w-sm">
+                    <h2 className="heading text-xl text-white mb-2">Event Not Found</h2>
+                    <p className="text-white/40 text-sm mb-5">
+                        The event you are looking for does not exist or has been removed.
                     </p>
                     <Link
                         href="/"
-                        className="inline-block px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                        className="inline-block px-5 py-2.5 rounded-xl bg-purple-500 text-white text-sm font-medium hover:bg-purple-400 transition-colors"
                     >
                         Browse Events
                     </Link>
@@ -370,9 +370,9 @@ export default function EventPage({ params }: EventPageProps) {
             {/* Confetti Animation */}
             <ConfettiEffect isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
 
-            <div className="max-w-lg mx-auto pb-8">
+            <div className="max-w-2xl mx-auto pb-8">
                 {/* Hero Image */}
-                <div className="relative h-72">
+                <div className="relative h-64 md:h-72">
                     <Image
                         src={event.coverImage || '/placeholder-event.jpg'}
                         alt={event.title}
@@ -381,76 +381,76 @@ export default function EventPage({ params }: EventPageProps) {
                         sizes="100vw"
                         priority
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-zinc-950/10" />
 
                     {/* Back Button */}
                     <Link
                         href="/"
-                        className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center"
+                        className="absolute top-4 left-4 w-9 h-9 rounded-lg bg-black/40 backdrop-blur-md flex items-center justify-center hover:bg-black/60 transition-colors"
                     >
-                        <ArrowLeft className="w-5 h-5 text-white" />
+                        <ArrowLeft className="w-4 h-4 text-white" />
                     </Link>
                 </div>
 
                 {/* Content */}
                 <motion.div
-                    className="px-4 -mt-20 relative z-10"
-                    initial={{ opacity: 0, y: 20 }}
+                    className="px-4 -mt-16 relative z-10"
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.4 }}
                 >
                     {/* Main Info Card */}
-                    <div className="glass-card p-6 mb-4">
-                        <h1 className="heading text-2xl text-white mb-4">{event.title}</h1>
+                    <div className="glass-card p-5 mb-3">
+                        <h1 className="heading text-xl md:text-2xl text-white mb-3 text-balance">{event.title}</h1>
 
-                        <div className="space-y-3 mb-6">
-                            <div className="flex items-center gap-3 text-white/70">
-                                <Calendar className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                        <div className="flex flex-col gap-2.5 mb-5">
+                            <div className="flex items-center gap-2.5 text-sm text-white/60">
+                                <Calendar className="w-4 h-4 text-purple-400 flex-shrink-0" />
                                 <span>
                                     {formatDate(event.date)} at {formatTime(event.date || event.time)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-3 text-white/70">
-                                <MapPin className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                            <div className="flex items-center gap-2.5 text-sm text-white/60">
+                                <MapPin className="w-4 h-4 text-purple-400 flex-shrink-0" />
                                 <div>
                                     <div className="font-medium text-white">{event.location || event.venue || 'Location TBA'}</div>
                                     {event.location && event.venue && event.location !== event.venue && (
-                                        <div className="text-sm text-white/50">{event.venue}</div>
+                                        <div className="text-xs text-white/40">{event.venue}</div>
                                     )}
                                 </div>
                             </div>
                         </div>
 
                         {event.description && (
-                            <p className="text-white/60 text-sm leading-relaxed">{event.description}</p>
+                            <p className="text-white/50 text-sm leading-relaxed">{event.description}</p>
                         )}
                     </div>
 
                     {/* Ticket Tier Selection */}
-                    <div className="glass-card p-6 mb-4">
-                        <h2 className="heading text-lg text-white mb-4">Select Ticket</h2>
+                    <div className="glass-card p-5 mb-3">
+                        <h2 className="heading text-base text-white mb-3">Select Ticket</h2>
 
-                        <div className="space-y-3">
+                        <div className="flex flex-col gap-2">
                             {tiers.map((tier) => (
                                 <motion.button
                                     key={tier.id}
                                     className={cn(
-                                        'w-full p-4 rounded-2xl border text-left transition-all',
+                                        'w-full p-3.5 rounded-xl border text-left transition-all',
                                         selectedTier?.id === tier.id
-                                            ? 'border-purple-500 bg-purple-500/10'
-                                            : 'border-white/10 bg-white/5 hover:border-white/20'
+                                            ? 'border-purple-500/50 bg-purple-500/8'
+                                            : 'border-white/6 bg-white/3 hover:border-white/12'
                                     )}
                                     onClick={() => setSelectedTier(tier)}
-                                    whileTap={{ scale: 0.98 }}
+                                    whileTap={{ scale: 0.99 }}
                                 >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <h3 className="font-medium text-white">{tier.name}</h3>
-                                        <span className="mono text-lg text-purple-400 font-semibold">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <h3 className="text-sm font-medium text-white">{tier.name}</h3>
+                                        <span className="mono text-base text-purple-400 font-semibold">
                                             {formatUSD(tier.price)}
                                         </span>
                                     </div>
                                     {tier.description && (
-                                        <p className="text-xs text-white/50">{tier.description}</p>
+                                        <p className="text-xs text-white/40">{tier.description}</p>
                                     )}
                                 </motion.button>
                             ))}
@@ -458,25 +458,25 @@ export default function EventPage({ params }: EventPageProps) {
                     </div>
 
                     {/* Quantity Selector */}
-                    <div className="glass-card p-6 mb-6">
-                        <h2 className="heading text-lg text-white mb-4">Quantity</h2>
+                    <div className="glass-card p-5 mb-5">
+                        <h2 className="heading text-base text-white mb-3">Quantity</h2>
 
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
                                 <button
                                     onClick={decreaseQuantity}
                                     disabled={quantity <= 1}
                                     className={cn(
-                                        'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                                        'w-10 h-10 rounded-lg flex items-center justify-center transition-all',
                                         quantity <= 1
-                                            ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                                            : 'bg-white/10 text-white hover:bg-white/20'
+                                            ? 'bg-white/3 text-white/20 cursor-not-allowed'
+                                            : 'bg-white/8 text-white hover:bg-white/15'
                                     )}
                                 >
-                                    <Minus className="w-5 h-5" />
+                                    <Minus className="w-4 h-4" />
                                 </button>
 
-                                <span className="mono text-3xl text-white font-bold w-12 text-center">
+                                <span className="mono text-2xl text-white font-bold w-10 text-center">
                                     {quantity}
                                 </span>
 
@@ -484,30 +484,30 @@ export default function EventPage({ params }: EventPageProps) {
                                     onClick={increaseQuantity}
                                     disabled={quantity >= 5}
                                     className={cn(
-                                        'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                                        'w-10 h-10 rounded-lg flex items-center justify-center transition-all',
                                         quantity >= 5
-                                            ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                                            : 'bg-white/10 text-white hover:bg-white/20'
+                                            ? 'bg-white/3 text-white/20 cursor-not-allowed'
+                                            : 'bg-white/8 text-white hover:bg-white/15'
                                     )}
                                 >
-                                    <Plus className="w-5 h-5" />
+                                    <Plus className="w-4 h-4" />
                                 </button>
                             </div>
 
                             <div className="text-right">
-                                <p className="text-xs text-white/50 mb-1">Total</p>
-                                <p className="mono text-2xl text-purple-400 font-bold">
+                                <p className="text-[11px] text-white/40 mb-0.5 uppercase tracking-wide">Total</p>
+                                <p className="mono text-xl text-purple-400 font-bold">
                                     {formatUSD(totalPrice)}
                                 </p>
                                 {solEquivalent && (
-                                    <p className="text-xs text-white/40 mt-0.5">
+                                    <p className="text-[11px] text-white/30 mt-0.5">
                                         {solPriceLoading ? '...' : `≈ ${solEquivalent}`}
                                     </p>
                                 )}
                             </div>
                         </div>
 
-                        <p className="text-xs text-white/40 mt-3 text-center">
+                        <p className="text-[11px] text-white/30 mt-2 text-center">
                             Maximum 5 tickets per transaction
                         </p>
                     </div>
@@ -523,21 +523,21 @@ export default function EventPage({ params }: EventPageProps) {
                             >
                                 {/* Error Message */}
                                 {errorMessage && (
-                                    <div className="w-full p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
+                                    <div className="w-full p-3 rounded-xl bg-red-500/8 border border-red-500/20 text-red-400 text-sm text-center">
                                         {errorMessage}
                                     </div>
                                 )}
 
                                 {/* Processing State */}
                                 {txState === 'processing' && (
-                                    <div className="w-full p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
+                                    <div className="w-full p-3 rounded-xl bg-purple-500/8 border border-purple-500/20 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         Waiting for wallet approval...
                                     </div>
                                 )}
 
                                 {txState === 'minting' && (
-                                    <div className="w-full p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
+                                    <div className="w-full p-3 rounded-xl bg-purple-500/8 border border-purple-500/20 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         Payment confirmed! Creating your ticket...
                                     </div>
@@ -546,7 +546,7 @@ export default function EventPage({ params }: EventPageProps) {
                                 {!authenticated ? (
                                     <button
                                         onClick={login}
-                                        className="w-full max-w-sm py-4 rounded-full bg-purple-500 hover:bg-purple-600 transition-colors text-white font-medium"
+                                        className="w-full max-w-sm py-3 rounded-xl bg-purple-500 hover:bg-purple-400 transition-colors text-white text-sm font-medium"
                                     >
                                         Sign In to Purchase
                                     </button>
@@ -561,24 +561,24 @@ export default function EventPage({ params }: EventPageProps) {
 
                         {txState === 'success' && (
                             <motion.div
-                                className="glass-card p-8 text-center mb-8"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
+                                className="glass-card p-6 text-center mb-8"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                                    <Check className="w-10 h-10 text-emerald-400" />
+                                <div className="w-14 h-14 rounded-xl bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
+                                    <Check className="w-7 h-7 text-emerald-400" />
                                 </div>
-                                <h3 className="heading text-xl text-white mb-2">
+                                <h3 className="heading text-lg text-white mb-1">
                                     {quantity > 1 ? `${quantity} Tickets Purchased!` : 'Ticket Purchased!'}
                                 </h3>
-                                <p className="text-white/60 text-sm mb-6">
+                                <p className="text-white/50 text-sm mb-5">
                                     Your {quantity > 1 ? 'tickets have' : 'ticket has'} been added to your wallet.
                                 </p>
                                 <Link
                                     href="/tickets"
-                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500 text-white text-sm font-medium hover:bg-purple-400 transition-colors"
                                 >
-                                    <Ticket className="w-5 h-5" />
+                                    <Ticket className="w-4 h-4" />
                                     View My Tickets
                                 </Link>
                             </motion.div>

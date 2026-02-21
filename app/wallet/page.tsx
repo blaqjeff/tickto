@@ -22,22 +22,21 @@ const SOL_PRICE_USD = 145; // Mock price for devnet
 function TransactionItem({ transaction }: { transaction: Transaction }) {
     return (
         <motion.div
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors"
-            initial={{ opacity: 0, x: -10 }}
+            className="flex items-center gap-3 p-3 rounded-lg bg-white/3 hover:bg-white/6 transition-colors"
+            initial={{ opacity: 0, x: -5 }}
             animate={{ opacity: 1, x: 0 }}
-            whileHover={{ x: 4 }}
         >
             {/* Icon */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500/20">
-                <ArrowDownLeft className="w-5 h-5 text-purple-400" />
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-500/12">
+                <ArrowDownLeft className="w-4 h-4 text-purple-400" />
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-                <h4 className="text-white text-sm font-medium line-clamp-1">
+                <h4 className="text-white text-[13px] font-medium line-clamp-1">
                     {transaction.title}
                 </h4>
-                <p className="text-white/40 text-xs">
+                <p className="text-white/30 text-[11px]">
                     {new Date(transaction.date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -47,7 +46,7 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
             </div>
 
             {/* Amount */}
-            <span className="mono text-sm font-semibold text-white">
+            <span className="mono text-[13px] font-semibold text-white/80">
                 -{Math.abs(transaction.amount).toFixed(3)} SOL
             </span>
         </motion.div>
@@ -222,77 +221,73 @@ export default function WalletPage() {
         <div className="px-4 py-6 max-w-lg mx-auto mb-20">
             {/* Header */}
             <motion.header
-                className="mb-8"
-                initial={{ opacity: 0, y: -20 }}
+                className="mb-6"
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <h1 className="heading text-3xl text-white mb-1">Wallet</h1>
-                <p className="text-white/50">Your crypto balance & history</p>
+                <h1 className="heading text-2xl text-white mb-1">Wallet</h1>
+                <p className="text-white/40 text-sm">Your crypto balance & history</p>
             </motion.header>
 
             {/* Balance Card */}
             <motion.div
-                className="glass-card p-6 mb-8"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card p-5 mb-6"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
             >
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                            <Wallet className="w-6 h-6 text-purple-400" />
-                        </div>
-                        <div>
-                            {/* Updated Label */}
-                            <p className="text-white/50 text-sm">Total Balance (USD)</p>
-                            {/* Display Balance in USD */}
-                            <h2 className="mono text-3xl text-white font-bold">
-                                ${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </h2>
-                            <p className="text-white/30 text-xs mt-1">
-                                ≈ {balance.toLocaleString('en-US', { minimumFractionDigits: 4 })} SOL
-                            </p>
-                        </div>
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center">
+                        <Wallet className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                        <p className="text-white/40 text-xs">Total Balance (USD)</p>
+                        <h2 className="mono text-2xl text-white font-bold">
+                            ${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </h2>
+                        <p className="text-white/25 text-[11px] mt-0.5">
+                            {balance.toLocaleString('en-US', { minimumFractionDigits: 4 })} SOL
+                        </p>
                     </div>
                 </div>
 
                 {/* Address Card */}
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500" />
+                <div className="flex items-center justify-between p-3 rounded-lg bg-white/4 border border-white/6">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-md bg-purple-500" />
                         <div>
-                            <p className="text-xs text-white/50">Your Address</p>
-                            <p className="mono text-sm text-white font-medium">
+                            <p className="text-[11px] text-white/30">Your Address</p>
+                            <p className="mono text-[13px] text-white font-medium">
                                 {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={copyAddress}
-                        className="p-2 rounded-lg hover:bg-white/10 transition-colors text-white/60 hover:text-white"
+                        className="p-1.5 rounded-md hover:bg-white/8 transition-colors text-white/40 hover:text-white"
                         title="Copy Address"
                     >
-                        {copying ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        {copying ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                 </div>
 
                 {/* Add Funds Button */}
                 <button
                     onClick={handleAddFunds}
-                    className="w-full mt-4 py-4 rounded-2xl bg-purple-500 hover:bg-purple-600 transition-colors flex items-center justify-center gap-2 text-white font-medium"
+                    className="w-full mt-3 py-3 rounded-xl bg-purple-500 hover:bg-purple-400 transition-colors flex items-center justify-center gap-2 text-white text-sm font-medium"
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-4 h-4" />
                     Add Funds
                 </button>
 
-                <div className="mt-4 flex gap-2">
+                <div className="mt-2 flex gap-2">
                     <a
                         href={`https://explorer.solana.com/address/${address}?cluster=devnet`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-white/80 text-sm font-medium"
+                        className="flex-1 py-2.5 rounded-lg bg-white/4 hover:bg-white/8 transition-colors flex items-center justify-center gap-2 text-white/60 text-[13px] font-medium"
                     >
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-3.5 h-3.5" />
                         Explorer
                     </a>
                 </div>
@@ -304,8 +299,8 @@ export default function WalletPage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
             >
-                <h3 className="heading text-lg text-white mb-4">Transaction History</h3>
-                <div className="space-y-3">
+                <h3 className="heading text-base text-white mb-3">Transaction History</h3>
+                <div className="flex flex-col gap-2">
                     {transactions.length > 0 ? (
                         transactions.map((tx, index) => (
                             <motion.div

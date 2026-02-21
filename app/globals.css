@@ -1,25 +1,21 @@
 @import "tailwindcss";
 
-/* ===== Glass House Design System ===== */
+/* ===== Glass House Design System — Refined ===== */
 :root {
   /* Core colors */
   --background: #09090b;
-  /* zinc-950 */
   --foreground: #fafafa;
 
-  /* Glass effects */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-blur: 40px;
+  /* Glass effects — subtler, sharper */
+  --glass-bg: rgba(255, 255, 255, 0.035);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-blur: 16px;
 
   /* Brand colors */
   --primary: #c084fc;
-  /* purple-400 */
-  --primary-glow: rgba(192, 132, 252, 0.5);
+  --primary-glow: rgba(192, 132, 252, 0.4);
   --success: #34d399;
-  /* emerald-400 */
   --destructive: #fb7185;
-  /* rose-400 */
 }
 
 @theme inline {
@@ -28,7 +24,6 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Glass House tokens */
   --color-glass-bg: var(--glass-bg);
   --color-glass-border: var(--glass-border);
   --color-primary: var(--primary);
@@ -44,15 +39,17 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== Gradient Mesh Background ===== */
+/* ===== Gradient Mesh Background — Subtler ===== */
 .gradient-mesh {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.2;
+  opacity: 0.12;
   background:
     radial-gradient(ellipse 80% 60% at 20% 10%, #a855f7 0%, transparent 50%),
     radial-gradient(ellipse 60% 50% at 80% 20%, #ec4899 0%, transparent 50%),
@@ -66,41 +63,42 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(9, 9, 11, 0.8);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--glass-border);
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   z-index: 50;
 }
 
-/* ===== Glass Card Styles ===== */
+/* ===== Glass Card Styles — Sharper ===== */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
-  border-radius: 32px;
+  border-radius: 16px;
   box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 8px 32px -8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ===== Desktop Card Hover Enhancement ===== */
 .glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card-hover:hover {
-  border-color: rgba(192, 132, 252, 0.3);
+  border-color: rgba(192, 132, 252, 0.2);
   box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 30px rgba(192, 132, 252, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 12px 40px -8px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(192, 132, 252, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
 }
 
-/* Ticket rip cutouts using clip-path */
+/* Ticket rip cutouts */
 .ticket-rip {
-  --rip-size: 16px;
+  --rip-size: 14px;
   position: relative;
 }
 
@@ -130,7 +128,7 @@ body {
 }
 
 .flip-card-inner {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
   position: relative;
 }
@@ -151,30 +149,28 @@ body {
   inset: 0;
 }
 
-/* ===== Swipe Button ===== */
+/* ===== Swipe Button — Sharper ===== */
 .swipe-track {
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
-  border: 1px solid var(--glass-border);
-  border-radius: 100px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 16px;
   overflow: hidden;
 }
 
 .swipe-handle {
   background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-  border-radius: 50%;
-  box-shadow: 0 0 20px var(--primary-glow);
+  border-radius: 12px;
+  box-shadow: 0 0 16px var(--primary-glow);
 }
 
 /* ===== Animations ===== */
 @keyframes pulse-glow {
-
   0%,
   100% {
-    box-shadow: 0 0 20px var(--primary-glow);
+    box-shadow: 0 0 16px var(--primary-glow);
   }
-
   50% {
-    box-shadow: 0 0 40px var(--primary-glow);
+    box-shadow: 0 0 28px var(--primary-glow);
   }
 }
 
@@ -186,7 +182,6 @@ body {
   0% {
     background-position: -200% 0;
   }
-
   100% {
     background-position: 200% 0;
   }
@@ -195,7 +190,7 @@ body {
 .shimmer {
   background: linear-gradient(90deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.06) 50%,
       transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
@@ -204,9 +199,18 @@ body {
 /* ===== Typography Utilities ===== */
 .heading {
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .mono {
   font-family: var(--font-mono), monospace;
+}
+
+/* ===== Scrollbar ===== */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
