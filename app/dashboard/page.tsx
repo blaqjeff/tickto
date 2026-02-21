@@ -145,37 +145,41 @@ export default function OrganizerDashboard() {
                     </div>
                 </GlassCardSimple>
 
-                <GlassCardSimple className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                            <DollarSign className="w-6 h-6 text-emerald-400" />
+                <Link href="/dashboard/revenue" className="block transition-transform hover:scale-[1.02]">
+                    <GlassCardSimple className="p-6 h-full border border-white/5 hover:border-emerald-500/30 transition-colors">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                <DollarSign className="w-6 h-6 text-emerald-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-neutral-400">Total Revenue</p>
+                                <h3 className="text-2xl font-bold text-white mono">${totalRevenue.toFixed(2)}</h3>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm text-neutral-400">Total Revenue</p>
-                            <h3 className="text-2xl font-bold text-white mono">${totalRevenue.toFixed(2)}</h3>
-                        </div>
-                    </div>
-                    <p className="text-xs text-emerald-400 flex items-center gap-1">
-                        <Activity className="w-3 h-3" />
-                        All-time sales
-                    </p>
-                </GlassCardSimple>
+                        <p className="text-xs text-emerald-400 flex items-center gap-1">
+                            <Activity className="w-3 h-3" />
+                            All-time sales
+                        </p>
+                    </GlassCardSimple>
+                </Link>
 
-                <GlassCardSimple className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                            <Users className="w-6 h-6 text-blue-400" />
+                <Link href="/dashboard/fans" className="block transition-transform hover:scale-[1.02]">
+                    <GlassCardSimple className="p-6 h-full border border-white/5 hover:border-blue-500/30 transition-colors">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                <Users className="w-6 h-6 text-blue-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-neutral-400">Loyal Fans</p>
+                                <h3 className="text-2xl font-bold text-white">{loyalFans}</h3>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm text-neutral-400">Loyal Fans</p>
-                            <h3 className="text-2xl font-bold text-white">{loyalFans}</h3>
-                        </div>
-                    </div>
-                    <p className="text-xs text-blue-400 flex items-center gap-1">
-                        <Activity className="w-3 h-3" />
-                        Unique ticket buyers
-                    </p>
-                </GlassCardSimple>
+                        <p className="text-xs text-blue-400 flex items-center gap-1">
+                            <Activity className="w-3 h-3" />
+                            Unique ticket buyers
+                        </p>
+                    </GlassCardSimple>
+                </Link>
             </div>
 
             {/* Event List */}
