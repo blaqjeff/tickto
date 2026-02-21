@@ -6,33 +6,78 @@ import { motion } from 'framer-motion';
 import { Ticket, PlusCircle, Compass, Wallet, User, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePrivy } from '@privy-io/react-auth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const navLinks = [
-    { label: 'Discover', href: '/', icon: Compass },
-    { label: 'Create', href: '/create', icon: PlusCircle, authRequired: true },
-    { label: 'My Tickets', href: '/tickets', icon: Ticket },
+import { supabase } from '@/lib/supabaseClient';
+import { Activity } from 'lucide-react';
+
+const allNavLinks = [
+    { label: 'Discover', href: '/discover', icon: Compass, roles: ['fan', 'organizer', 'public'] },
+    { label: 'Dashboard', href: '/dashboard', icon: Activity, roles: ['organizer'] },
+    { label: 'Create', href: '/create', icon: PlusCircle, roles: ['organizer'] },
+    { label: 'My Tickets', href: '/tickets', icon: Ticket, roles: ['fan'] },
 ];
 
 export function Navbar() {
     const pathname = usePathname();
     const { authenticated, login, user } = usePrivy();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [role, setRole] = useState<string | null>(null);
+    const [username, setUsername] = useState<string | null>(null);
 
-    const visibleLinks = navLinks.filter(
-        (link) => !link.authRequired || authenticated
-    );
+    useEffect(() => {
+        if (!authenticated || !user) {
+            setRole(null);
+            setUsername(null);
+            return;
+        }
+        const fetchRole = async () => {
+            try {
+                const { data } = await supabase
+                    .from('users')
+                    .select('primary_role, username')
+                    .eq('id', user.id)
+                    .single();
+                if (data) {
+                    setRole(data.primary_role);
+                    if (data.username) setUsername(data.username);
+                }
+            } catch (err) {
+                console.error("Failed to fetch user data for navbar", err);
+            }
+        };
+        fetchRole();
+    }, [authenticated, user]);
+
+    // Determine which links to show based on Auth status and Role
+    const visibleLinks = allNavLinks.filter((link) => {
+        if (!authenticated) {
+            // Unauthenticated users only see public links
+            return link.roles.includes('public');
+        }
+
+        // If authenticated but role hasn't loaded yet, show nothing or just public
+        if (!role) {
+            return link.roles.includes('public');
+        }
+
+        // Return links matching their specific role
+        return link.roles.includes(role);
+    });
 
     // Prefer Solana wallet address for display
     const solanaWallet = user?.linkedAccounts?.find(
         (a: any) => a.type === 'wallet' && a.chainType === 'solana'
     ) as any;
     const walletAddress = solanaWallet?.address || user?.wallet?.address;
-    const displayName = walletAddress
-        ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
-        : user?.email?.address
-            ? user.email.address.split('@')[0]
-            : 'Account';
+
+    const displayName = username
+        ? `@${username}`
+        : walletAddress
+            ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
+            : user?.email?.address
+                ? user.email.address.split('@')[0]
+                : 'Account';
 
     return (
         <nav className="top-navbar">

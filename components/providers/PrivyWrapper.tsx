@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { ReactNode } from 'react';
 
+import { OnboardingProvider } from './OnboardingProvider';
+
 // Dynamically import PrivyProvider with SSR disabled to prevent HTML validation errors
 const PrivyClientProvider = dynamic(
     () => import('./PrivyClientProvider').then((mod) => mod.PrivyClientProvider),
@@ -27,7 +29,9 @@ export function PrivyWrapper({ children }: PrivyWrapperProps) {
 
     return (
         <PrivyClientProvider appId={appId}>
-            {children}
+            <OnboardingProvider>
+                {children}
+            </OnboardingProvider>
         </PrivyClientProvider>
     );
 }
