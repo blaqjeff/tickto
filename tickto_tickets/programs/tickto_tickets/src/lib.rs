@@ -41,13 +41,14 @@ pub mod tickto_tickets {
         let tree_config_info = ctx.accounts.tree_config.to_account_info();
         let merkle_tree_info = ctx.accounts.merkle_tree.to_account_info();
         let payer_info = ctx.accounts.organizer.to_account_info();
-        let tree_creator_info = ctx.accounts.event_config.to_account_info();
+        let tree_creator_info = event_config.to_account_info();
         let log_wrapper_info = ctx.accounts.log_wrapper.to_account_info();
         let compression_program_info = ctx.accounts.compression_program.to_account_info();
         let system_program_info = ctx.accounts.system_program.to_account_info();
 
+        let bubblegum_program_info = ctx.accounts.bubblegum_program.to_account_info();
         let mut cpi_builder = CreateTreeConfigV2CpiBuilder::new(
-            &ctx.accounts.bubblegum_program.to_account_info()
+            &bubblegum_program_info
         );
 
         cpi_builder
@@ -113,13 +114,14 @@ pub mod tickto_tickets {
         let leaf_delegate_info = ctx.accounts.buyer.to_account_info();
         let merkle_tree_info = ctx.accounts.merkle_tree.to_account_info();
         let payer_info = ctx.accounts.buyer.to_account_info();
-        let tree_creator_or_delegate_info = ctx.accounts.event_config.to_account_info();
+        let tree_creator_or_delegate_info = event_config.to_account_info();
         let log_wrapper_info = ctx.accounts.log_wrapper.to_account_info();
         let compression_program_info = ctx.accounts.compression_program.to_account_info();
         let system_program_info = ctx.accounts.system_program.to_account_info();
         
+        let bubblegum_program_info = ctx.accounts.bubblegum_program.to_account_info();
         let mut cpi_builder = MintV2CpiBuilder::new(
-            &ctx.accounts.bubblegum_program.to_account_info()
+            &bubblegum_program_info
         );
 
         cpi_builder

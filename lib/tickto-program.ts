@@ -7,69 +7,15 @@ import {
     BN
 } from "@coral-xyz/anchor";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-    createTree,
-    createAllocTreeIx
-} from "@solana/spl-account-compression";
+import { TicktoTickets } from "../tickto_tickets/target/types/tickto_tickets";
+import TICKTO_IDL from "../tickto_tickets/target/idl/tickto_tickets.json";
+
 
 // Program ID from lib.rs
 export const PROGRAM_ID = new PublicKey("Fqqoja5BG9g4mY1mocc8YErH4kdgtzHnM1CrJVzQ5PZZ");
 
-// Temporary IDL interface while build is blocked
-// Once build succeeds, we will import the full IDL JSON
-export const IDL: Idl = {
-    "version": "0.1.0",
-    "name": "tickto_tickets",
-    "instructions": [
-        {
-            "name": "initializePlatform",
-            "accounts": [
-                { "name": "admin", "isMut": true, "isSigner": true },
-                { "name": "platformConfig", "isMut": true, "isSigner": false },
-                { "name": "merkleTree", "isMut": false, "isSigner": false },
-                { "name": "collectionMint", "isMut": false, "isSigner": false },
-                { "name": "systemProgram", "isMut": false, "isSigner": false }
-            ],
-            "args": []
-        },
-        {
-            "name": "createEvent",
-            "accounts": [
-                { "name": "organizer", "isMut": true, "isSigner": true },
-                { "name": "eventConfig", "isMut": true, "isSigner": false },
-                { "name": "systemProgram", "isMut": false, "isSigner": false }
-            ],
-            "args": [
-                { "name": "eventId", "type": "string" },
-                { "name": "eventName", "type": "string" },
-                { "name": "metadataUri", "type": "string" },
-                { "name": "ticketPriceLamports", "type": "u64" },
-                { "name": "maxSupply", "type": "u32" }
-            ]
-        },
-        {
-            "name": "mintTicket",
-            "accounts": [
-                { "name": "buyer", "isMut": true, "isSigner": true },
-                { "name": "organizer", "isMut": true, "isSigner": false },
-                { "name": "eventConfig", "isMut": true, "isSigner": false },
-                { "name": "platformConfig", "isMut": true, "isSigner": false },
-                { "name": "merkleTree", "isMut": true, "isSigner": false },
-                { "name": "treeConfig", "isMut": true, "isSigner": false },
-                { "name": "bubblegumProgram", "isMut": false, "isSigner": false },
-                { "name": "compressionProgram", "isMut": false, "isSigner": false },
-                { "name": "logWrapper", "isMut": false, "isSigner": false },
-                { "name": "systemProgram", "isMut": false, "isSigner": false }
-            ],
-            "args": [
-                { "name": "eventId", "type": "string" }
-            ]
-        }
-    ]
-} as any;
-
 export class TicktoClient {
-    program: Program;
+    program: Program<TicktoTickets>;
     connection: Connection;
 
     constructor(
@@ -85,26 +31,16 @@ export class TicktoClient {
             AnchorProvider.defaultOptions()
         );
 
-        this.program = new Program(IDL, PROGRAM_ID, provider);
+        this.program = new Program(TICKTO_IDL as TicktoTickets, provider);
     }
 
     /**
      * Derives the Event Config PDA
      */
     getEventConfigPda(eventId: string): PublicKey {
+        const safeEventId = eventId.replace(/-/g, '').substring(0, 32);
         const [pda] = PublicKey.findProgramAddressSync(
-            [new TextEncoder().encode("event"), new TextEncoder().encode(eventId)],
-            PROGRAM_ID
-        );
-        return pda;
-    }
-
-    /**
-     * Derives the Platform Config PDA
-     */
-    getPlatformConfigPda(): PublicKey {
-        const [pda] = PublicKey.findProgramAddressSync(
-            [new TextEncoder().encode("platform")],
+            [new TextEncoder().encode("event"), new TextEncoder().encode(safeEventId)],
             PROGRAM_ID
         );
         return pda;
@@ -112,7 +48,6 @@ export class TicktoClient {
 
     /**
      * Creates an instruction to create a new event.
-     * Note: Does NOT create a Merkle tree anymore (shared tree model).
      */
     async createCreateEventIx(
         organizer: PublicKey,
@@ -120,13 +55,25 @@ export class TicktoClient {
         eventName: string,
         metadataUri: string,
         ticketPriceLamports: BN,
-        maxSupply: number
+        maxSupply: number,
+        merkleTree: PublicKey
     ) {
+        const safeEventId = eventId.replace(/-/g, '').substring(0, 32);
         const eventConfigPda = this.getEventConfigPda(eventId);
+
+        // Bubblegum & Compression Program IDs
+        const BUBBLEGUM_PROGRAM_ID = new PublicKey("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
+        const COMPRESSION_PROGRAM_ID = new PublicKey("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK");
+        const NOOP_PROGRAM_ID = new PublicKey("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV");
+
+        const [treeConfig] = PublicKey.findProgramAddressSync(
+            [merkleTree.toBuffer()],
+            BUBBLEGUM_PROGRAM_ID
+        );
 
         return await this.program.methods
             .createEvent(
-                eventId,
+                safeEventId,
                 eventName,
                 metadataUri,
                 ticketPriceLamports,
@@ -134,23 +81,26 @@ export class TicktoClient {
             )
             .accounts({
                 organizer,
-                eventConfig: eventConfigPda,
-                systemProgram: SystemProgram.programId,
-            } as any) // Cast to any until type generation works
+                treeConfig: treeConfig,
+                merkleTree: merkleTree,
+                bubblegumProgram: BUBBLEGUM_PROGRAM_ID,
+                compressionProgram: COMPRESSION_PROGRAM_ID,
+                logWrapper: NOOP_PROGRAM_ID,
+            })
             .instruction();
     }
 
     /**
      * Creates an instruction to mint a ticket.
-     * Requires knowledge of the platform's shared tree address.
      */
     async createMintTicketIx(
         buyer: PublicKey,
+        organizer: PublicKey,
         eventId: string,
-        merkleTree: PublicKey // Passed from platform config lookup
+        merkleTree: PublicKey
     ) {
+        const safeEventId = eventId.replace(/-/g, '').substring(0, 32);
         const eventConfigPda = this.getEventConfigPda(eventId);
-        const platformConfigPda = this.getPlatformConfigPda();
 
         // Bubblegum & Compression Program IDs
         const BUBBLEGUM_PROGRAM_ID = new PublicKey("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
@@ -163,38 +113,24 @@ export class TicktoClient {
             BUBBLEGUM_PROGRAM_ID
         );
 
-        // Fetch event config to get organizer
-        // In a real app, we'd fetch the account. Here we might need the caller to provide it.
-        // But wait, the instruction builder needs the organizer account for the constraint check.
-        // We'll create a helper method `fetchEventConfig` to get this data.
-
-        return {
-            instructionBuilder: (organizer: PublicKey) => this.program.methods
-                .mintTicket(eventId)
-                .accounts({
-                    buyer,
-                    organizer,
-                    eventConfig: eventConfigPda,
-                    platformConfig: platformConfigPda,
-                    merkleTree: merkleTree,
-                    treeConfig: treeConfig,
-                    bubblegumProgram: BUBBLEGUM_PROGRAM_ID,
-                    compressionProgram: COMPRESSION_PROGRAM_ID,
-                    logWrapper: NOOP_PROGRAM_ID,
-                    systemProgram: SystemProgram.programId,
-                } as any)
-                .instruction()
-        };
+        return await this.program.methods
+            .mintTicket(safeEventId)
+            .accounts({
+                buyer,
+                organizer,
+                treeConfig: treeConfig,
+                merkleTree: merkleTree,
+                bubblegumProgram: BUBBLEGUM_PROGRAM_ID,
+                compressionProgram: COMPRESSION_PROGRAM_ID,
+                logWrapper: NOOP_PROGRAM_ID,
+            })
+            .instruction();
     }
 
     async fetchEventConfig(eventId: string) {
         const pda = this.getEventConfigPda(eventId);
-        // Cast to any because TS types aren't generated yet
-        return await (this.program.account as any).eventConfig.fetch(pda);
+        return await this.program.account.eventConfig.fetch(pda);
     }
 
-    async fetchPlatformConfig() {
-        const pda = this.getPlatformConfigPda();
-        return await (this.program.account as any).platformConfig.fetch(pda);
-    }
+
 }

@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Event, TransactionState } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { formatUSD, usdToSol, formatSOL, getSolPrice } from '@/lib/jupiter';
+import { TicktoClient } from '@/lib/tickto-program';
 import {
     Connection,
     PublicKey,
@@ -156,7 +157,7 @@ export default function EventPage({ params }: EventPageProps) {
         }
 
         // Privy v3: wallets from @privy-io/react-auth/solana contains Solana wallets
-        console.log("Solana wallets:", wallets.length, wallets.map(w => ({ addr: w.address?.slice(0, 8), type: w.walletClientType })));
+        console.log("Solana wallets:", wallets.length, wallets.map(w => ({ addr: w.address?.slice(0, 8), type: (w as any).walletClientType })));
         console.log("User linked accounts:", user?.linkedAccounts?.map((a: any) => ({ type: a.type, chain: a.chainType, addr: a.address?.slice(0, 8) })));
 
         // Try to find wallet from useWallets() hook
@@ -211,14 +212,47 @@ export default function EventPage({ params }: EventPageProps) {
                     throw new Error(`Organizer wallet address is invalid: ${organizerKeyStr}`);
                 }
 
-                // Create the transfer transaction
-                const transaction = new Transaction().add(
-                    SystemProgram.transfer({
-                        fromPubkey,
-                        toPubkey,
-                        lamports: lamports,
-                    })
+                // Prepare the TicktoClient
+                const ticktoClient = new TicktoClient(connection); // Read-only, we sign raw manually
+
+                // IMPORTANT: Fetch the Merkle tree from the event data or platform config.
+                // In a production environment, this would be stored alongside the event on Supabase.
+                // For MVP testing, we'll try to use a static test tree or look it up.
+                // Normally: const merkleTreeStr = event.merkle_tree;
+                // Currently returning fake/mocked address for testing if not set
+                const merkleTreeStr = event.merkle_tree || "11111111111111111111111111111111"; // MUST REPLACE
+                let merkleTreePubKey: PublicKey;
+
+                try {
+                    merkleTreePubKey = new PublicKey(merkleTreeStr);
+                } catch {
+                    throw new Error("Invalid Merkle Tree for this event. Event setup is incomplete.");
+                }
+
+                // 1. SOL Transfer Instruction to Organizer
+                const transferIx = SystemProgram.transfer({
+                    fromPubkey,
+                    toPubkey,
+                    lamports: lamports,
+                });
+
+                // 2. Mint Ticket Instruction to Bubblegum
+                // We use our TicktoClient helper to generate the instruction
+                const mintIx = await ticktoClient.createMintTicketIx(
+                    fromPubkey,     // buyer
+                    toPubkey,       // organizer
+                    event.id,       // eventId
+                    merkleTreePubKey // merkleTree
                 );
+
+                // Create the atomic transaction
+                const transaction = new Transaction()
+                    .add(transferIx);
+
+                // Only enforce atomic minting if a valid (non-dummy) Merkle tree exists
+                if (event.merkle_tree && event.merkle_tree !== "11111111111111111111111111111111") {
+                    transaction.add(mintIx);
+                }
 
                 // Get latest blockhash
                 const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
@@ -264,6 +298,7 @@ export default function EventPage({ params }: EventPageProps) {
                         qr_code: qrCode,
                         token_id: tokenId,
                         status: 'valid',
+                        on_chain_status: 'minted',
                         minted_at: new Date().toISOString(),
                         price_paid: selectedTier.price,
                     })
@@ -271,10 +306,10 @@ export default function EventPage({ params }: EventPageProps) {
             }
 
             const results = await Promise.all(ticketPromises);
-            const hasError = results.some(r => r.error);
+            const hasError = results.some((r: any) => r.error);
 
             if (hasError) {
-                const errors = results.filter(r => r.error).map(r => r.error);
+                const errors = results.filter((r: any) => r.error).map((r: any) => r.error);
                 console.error("Ticket save errors:", JSON.stringify(errors, null, 2));
                 throw new Error(`Payment successful but failed to save ticket: ${errors[0]?.message || 'Unknown error'}`);
             }

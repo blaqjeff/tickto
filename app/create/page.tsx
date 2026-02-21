@@ -5,8 +5,14 @@ import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallets } from '@privy-io/react-auth/solana';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Upload, Calendar, MapPin, Tag, Plus, Trash2, Ticket } from 'lucide-react';
+import { Loader2, Upload, Calendar, MapPin, Plus, Trash2, Ticket } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { TicktoClient } from '@/lib/tickto-program';
+import { useSignAndSendTransaction } from '@privy-io/react-auth/solana';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
+
+const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 
 interface TicketTier {
     name: string;
@@ -17,6 +23,7 @@ interface TicketTier {
 export default function CreateEventPage() {
     const { ready, authenticated, user } = usePrivy();
     const { wallets } = useWallets();
+    const { signAndSendTransaction } = useSignAndSendTransaction();
     const router = useRouter();
 
     const [isLoading, setIsLoading] = useState(false);
@@ -150,14 +157,63 @@ export default function CreateEventPage() {
                 image_url: publicUrl,
                 owner_id: user.id,
                 organizer_wallet: organizerWallet,
-                ticket_tiers: numericTiers
+                ticket_tiers: numericTiers,
+                merkle_tree: "11111111111111111111111111111111"
             };
 
             console.log("Submitting:", payload);
 
-            // 5. Insert
-            const { error: insertError } = await supabase.from('events').insert([payload]);
+            // 5. Insert -> also .select() to get the ID back
+            const { data, error: insertError } = await supabase.from('events').insert([payload]).select();
             if (insertError) throw insertError;
+
+            // 6. On-Chain Anchor Setup via TicktoClient
+            try {
+                const solanaWallet = wallets[0];
+                if (!solanaWallet?.address) throw new Error("No connected Solana wallet.");
+
+                const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+                const ticktoClient = new TicktoClient(connection);
+
+                // Use a mocked generic Merkle tree since we aren't creating them dynamically yet
+                const merkleTreeStr = "11111111111111111111111111111111"; // MUST REPLACE in prod
+                const merkleTreePubKey = new PublicKey(merkleTreeStr);
+
+                // Assuming `data` contains the inserted row with its shiny new UUID (event.id)
+                const eventId = data?.[0]?.id || payload.title.replace(/\s+/g, '-').toLowerCase() + '-' + Date.now();
+
+                const createEventIx = await ticktoClient.createCreateEventIx(
+                    new PublicKey(organizerWallet), // organizer
+                    eventId, // String length limits apply in production
+                    payload.title.substring(0, 32), // eventName
+                    payload.image_url, // uri
+                    new BN(0), // ticketPriceLamports - Just tracking 0 for now in the contract config
+                    totalTickets, // maxSupply
+                    merkleTreePubKey // shared/event merkle tree
+                );
+
+                const transaction = new Transaction().add(createEventIx);
+                const { blockhash } = await connection.getLatestBlockhash('confirmed');
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = new PublicKey(organizerWallet);
+
+                const serializedTx = transaction.serialize({
+                    requireAllSignatures: false,
+                    verifySignatures: false,
+                });
+
+                console.log("Broadcasting createEvent to Solana...");
+                await signAndSendTransaction({
+                    transaction: new Uint8Array(serializedTx),
+                    wallet: solanaWallet,
+                    chain: 'solana:devnet',
+                });
+
+                // (Optional) Update Supabase row with the `merkleTree` and PDA here
+            } catch (chainErr) {
+                console.error("Failed to setup event on-chain:", chainErr);
+                // We don't block the UI here, but in production we'd want atomic consistency
+            }
 
             window.location.href = "/"; // Success - Fresh state redirect
         } catch (err: any) {

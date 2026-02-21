@@ -16,6 +16,7 @@ export interface Event {
     total_tickets?: number;
     owner_id?: string;
     organizer_wallet?: string; // Solana address for receiving payments
+    merkle_tree?: string; // Anchor Merkle Tree Address
 }
 
 export type EventCategory =

@@ -59,7 +59,7 @@ export function PrivyClientProvider({ children, appId }: PrivyClientProviderProp
                     },
                 },
                 solana: {
-                    rpcs: solanaRpcs,
+                    rpcs: solanaRpcs as any,
                 },
             }}
         >
