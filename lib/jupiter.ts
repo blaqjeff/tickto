@@ -112,17 +112,17 @@ async function fetchPriceFromServerContext(): Promise<number> {
                 throw new Error(`Jupiter Price API returned ${res.status}`);
             }
 
-            const data: JupiterPriceResponse = await res.json();
-            const solData = data.data[SOL_MINT];
+            const data = await res.json();
+            const solData = data?.[SOL_MINT];
 
-            if (!solData || !solData.price) {
-                throw new Error('SOL price not available from Jupiter');
+            if (!solData || !solData.usdPrice) {
+                throw new Error('SOL price not available from Jupiter v3');
             }
 
-            price = parseFloat(solData.price);
+            price = parseFloat(solData.usdPrice);
         } else {
             // No Jupiter key — use CoinGecko directly
-            console.info('No NEXT_PUBLIC_JUPITER_API_KEY set, using CoinGecko for SOL price');
+            console.info('No JUPITER_API_KEY set, using CoinGecko for SOL price');
             price = await getSolPriceFromCoinGecko();
         }
 
