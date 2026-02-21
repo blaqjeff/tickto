@@ -15,7 +15,7 @@ const allNavLinks = [
     { label: 'Discover', href: '/discover', icon: Compass, roles: ['fan', 'organizer', 'public'] },
     { label: 'Dashboard', href: '/dashboard', icon: Activity, roles: ['organizer'] },
     { label: 'Create', href: '/create', icon: PlusCircle, roles: ['organizer'] },
-    { label: 'My Tickets', href: '/tickets', icon: Ticket, roles: ['fan'] },
+    { label: 'My Tickets', href: '/tickets', icon: Ticket, roles: ['fan', 'organizer'] },
 ];
 
 export function Navbar() {

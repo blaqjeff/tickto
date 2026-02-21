@@ -212,7 +212,7 @@ export default function OrganizerDashboard() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
                             >
-                                <Link href={`/event/${event.id}`}>
+                                <Link href={`/dashboard/event/${event.id}`}>
                                     <GlassCardSimple className="overflow-hidden group h-full flex flex-col hover:border-purple-500/50 transition-colors">
                                         <div className="relative h-48 -mx-6 -mt-6 mb-4 overflow-hidden">
                                             <Image

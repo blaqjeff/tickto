@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import QRCode from 'react-qr-code';
 import { Calendar, MapPin, QrCode, Ticket, Send, Banknote, Loader2 } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -135,15 +136,26 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
             }
             backContent={
                 <div className="flex flex-col items-center justify-center h-full">
-                    {/* QR Code Placeholder */}
-                    <div className="w-36 h-36 bg-white rounded-2xl p-3 mb-3">
-                        <div className="w-full h-full bg-zinc-900 rounded-xl flex items-center justify-center">
-                            <QrCode className="w-16 h-16 text-white" />
-                        </div>
+                    {/* Rendered QR Code */}
+                    <div className="w-36 h-36 bg-white rounded-xl p-2 mb-3 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.15)] ring-1 ring-white/10 overflow-hidden">
+                        <QRCode
+                            value={JSON.stringify({
+                                id: ticket.id,
+                                event: eventTitle,
+                                tier: tierName,
+                                token: tokenId
+                            })}
+                            size={128}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                            bgColor="#ffffff"
+                            fgColor="#000000"
+                        />
                     </div>
 
                     {/* Ticket Code */}
-                    <p className="mono text-sm text-white/80 mb-1">{qrCode}</p>
+                    <p className="mono text-xs text-white/80 mb-1 px-4 text-center break-all line-clamp-2">
+                        {qrCode.length > 20 ? `${qrCode.substring(0, 16)}...` : qrCode}
+                    </p>
                     <p className="text-xs text-white/40 mb-4">Token ID: #{tokenId}</p>
 
                     {/* Action Buttons */}
