@@ -62,10 +62,40 @@ export async function getSolPrice(): Promise<number> {
         return cachedSolPrice.price;
     }
 
-    // Try Jupiter first if API key is available
-    const jupiterApiKey = typeof window !== 'undefined'
-        ? process.env.NEXT_PUBLIC_JUPITER_API_KEY
-        : process.env.NEXT_PUBLIC_JUPITER_API_KEY;
+    let price: number;
+
+    // If running on the client, proxy through our backend to hide the API key
+    if (typeof window !== 'undefined') {
+        try {
+            const res = await fetch('/api/price');
+            if (!res.ok) throw new Error(`Proxy returned ${res.status}`);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            price = data.price;
+        } catch (err) {
+            console.warn('Proxy failed, falling back to CoinGecko directly:', err);
+            price = await getSolPriceFromCoinGecko();
+        }
+    } else {
+        // Running on the server, fetch from Jupiter directly
+        price = await fetchPriceFromServerContext();
+    }
+
+    cachedSolPrice = { price, timestamp: Date.now() };
+    return price;
+}
+
+/**
+ * Internal helper to fetch price from Jupiter (or CoinGecko fallback)
+ * Securely uses the backend environment variable.
+ */
+async function fetchPriceFromServerContext(): Promise<number> {
+    if (cachedSolPrice && Date.now() - cachedSolPrice.timestamp < CACHE_TTL_MS) {
+        return cachedSolPrice.price;
+    }
+
+    // The API key is now strictly an internal server secret
+    const jupiterApiKey = process.env.JUPITER_API_KEY;
 
     try {
         let price: number;
@@ -100,14 +130,12 @@ export async function getSolPrice(): Promise<number> {
             throw new Error(`Invalid SOL price: ${price}`);
         }
 
-        cachedSolPrice = { price, timestamp: Date.now() };
         return price;
     } catch (error) {
         // Try CoinGecko as fallback if Jupiter failed
         try {
             console.warn('Primary price source failed, trying CoinGecko fallback:', error);
             const price = await getSolPriceFromCoinGecko();
-            cachedSolPrice = { price, timestamp: Date.now() };
             return price;
         } catch {
             // If we have a stale cached price, use it

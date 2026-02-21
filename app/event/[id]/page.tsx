@@ -51,8 +51,7 @@ export default function EventPage({ params }: EventPageProps) {
 
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedTier, setSelectedTier] = useState<TierOption | null>(null);
-    const [quantity, setQuantity] = useState(1);
+    const [tierQuantities, setTierQuantities] = useState<Record<string, number>>({});
     const [txState, setTxState] = useState<TransactionState>('idle');
     const [showConfetti, setShowConfetti] = useState(false);
     const [purchasing, setPurchasing] = useState(false);
@@ -67,13 +66,7 @@ export default function EventPage({ params }: EventPageProps) {
             const data = await getEventById(id);
             setEvent(data);
 
-            // Auto-select first tier if available
-            if (data) {
-                const tiers = getTiers(data);
-                if (tiers.length > 0) {
-                    setSelectedTier(tiers[0]);
-                }
-            }
+            // No default selection anymore, users pick their quantities
 
             setLoading(false);
         }
@@ -107,8 +100,11 @@ export default function EventPage({ params }: EventPageProps) {
         ];
     }
 
-    // Calculate total price (USD)
-    const totalPrice = selectedTier ? selectedTier.price * quantity : 0;
+    const tiers = event ? getTiers(event) : [];
+
+    // Calculate total quantity & price
+    const totalQuantity = Object.values(tierQuantities).reduce((sum, q) => sum + q, 0);
+    const totalPrice = tiers.reduce((sum, tier) => sum + (tierQuantities[tier.id] || 0) * tier.price, 0);
 
     // Fetch SOL equivalent when price or quantity changes
     useEffect(() => {
@@ -131,17 +127,22 @@ export default function EventPage({ params }: EventPageProps) {
     }, [totalPrice]);
 
     // Quantity controls
-    const increaseQuantity = () => {
-        if (quantity < 5) setQuantity(q => q + 1);
+    const increaseQuantity = (tierId: string) => {
+        if (totalQuantity >= 5) return;
+        setTierQuantities(prev => ({ ...prev, [tierId]: (prev[tierId] || 0) + 1 }));
     };
 
-    const decreaseQuantity = () => {
-        if (quantity > 1) setQuantity(q => q - 1);
+    const decreaseQuantity = (tierId: string) => {
+        setTierQuantities(prev => {
+            const current = (prev[tierId] || 0);
+            if (current <= 0) return prev;
+            return { ...prev, [tierId]: current - 1 };
+        });
     };
 
     // Handle purchase with real Solana transaction
     const handlePurchase = async () => {
-        if (!event || !selectedTier) return;
+        if (!event || totalQuantity === 0) return;
         setErrorMessage(null);
 
         // Check if user is authenticated
@@ -286,23 +287,28 @@ export default function EventPage({ params }: EventPageProps) {
 
             // Create ticket records
             const ticketPromises = [];
-            for (let i = 0; i < quantity; i++) {
-                const qrCode = `${event.id}-${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`;
-                const tokenId = `tkt-${Date.now()}-${i}`;
-                ticketPromises.push(
-                    supabase.from('tickets').insert({
-                        event_id: event.id,
-                        owner_id: user.id,
-                        tier_name: selectedTier.name,
-                        tier: selectedTier.name.toLowerCase().replace(/\s+/g, '-'),
-                        qr_code: qrCode,
-                        token_id: tokenId,
-                        status: 'valid',
-                        on_chain_status: 'minted',
-                        minted_at: new Date().toISOString(),
-                        price_paid: selectedTier.price,
-                    })
-                );
+            let i = 0;
+            for (const tier of tiers) {
+                const qty = tierQuantities[tier.id] || 0;
+                for (let j = 0; j < qty; j++) {
+                    const qrCode = `${event.id}-${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`;
+                    const tokenId = `tkt-${Date.now()}-${i}`;
+                    ticketPromises.push(
+                        supabase.from('tickets').insert({
+                            event_id: event.id,
+                            owner_id: user.id,
+                            tier_name: tier.name,
+                            tier: tier.name.toLowerCase().replace(/\s+/g, '-'),
+                            qr_code: qrCode,
+                            token_id: tokenId,
+                            status: 'valid',
+                            on_chain_status: 'minted',
+                            minted_at: new Date().toISOString(),
+                            price_paid: tier.price,
+                        })
+                    );
+                    i++;
+                }
             }
 
             const results = await Promise.all(ticketPromises);
@@ -327,8 +333,7 @@ export default function EventPage({ params }: EventPageProps) {
         }
     };
 
-    // Get tiers for the event
-    const tiers = event ? getTiers(event) : [];
+    // Get tiers for the event (already handled at top of component)
 
     // Loading state
     if (loading) {
@@ -428,89 +433,97 @@ export default function EventPage({ params }: EventPageProps) {
 
                     {/* Ticket Tier Selection */}
                     <div className="glass-card p-6 mb-4">
-                        <h2 className="heading text-lg text-white mb-4">Select Ticket</h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="heading text-lg text-white">Select Tickets</h2>
+                            <span className="text-xs text-white/50">{totalQuantity}/5 Max</span>
+                        </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {tiers.map((tier) => (
-                                <motion.button
+                                <div
                                     key={tier.id}
                                     className={cn(
-                                        'w-full p-4 rounded-2xl border text-left transition-all',
-                                        selectedTier?.id === tier.id
-                                            ? 'border-purple-500 bg-purple-500/10'
-                                            : 'border-white/10 bg-white/5 hover:border-white/20'
+                                        "w-full p-4 rounded-2xl border transition-all flex flex-col gap-3",
+                                        (tierQuantities[tier.id] || 0) > 0
+                                            ? "border-purple-500/50 bg-purple-500/5"
+                                            : "border-white/10 bg-white/5"
                                     )}
-                                    onClick={() => setSelectedTier(tier)}
-                                    whileTap={{ scale: 0.98 }}
                                 >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <h3 className="font-medium text-white">{tier.name}</h3>
-                                        <span className="mono text-lg text-purple-400 font-semibold">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h3 className="font-medium text-white">{tier.name}</h3>
+                                            {tier.description && (
+                                                <p className="text-xs text-white/50 mt-1">{tier.description}</p>
+                                            )}
+                                        </div>
+                                        <span className="mono text-lg text-purple-400 font-semibold shrink-0 ml-4">
                                             {formatUSD(tier.price)}
                                         </span>
                                     </div>
-                                    {tier.description && (
-                                        <p className="text-xs text-white/50">{tier.description}</p>
-                                    )}
-                                </motion.button>
+
+                                    <div className="flex items-center justify-end gap-3 border-t border-white/5 pt-3">
+                                        <button
+                                            onClick={() => decreaseQuantity(tier.id)}
+                                            disabled={!(tierQuantities[tier.id] > 0)}
+                                            className={cn(
+                                                'w-8 h-8 rounded-full flex items-center justify-center transition-all',
+                                                !(tierQuantities[tier.id] > 0)
+                                                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'
+                                            )}
+                                        >
+                                            <Minus className="w-4 h-4" />
+                                        </button>
+
+                                        <span className="mono text-lg text-white font-bold w-6 text-center">
+                                            {tierQuantities[tier.id] || 0}
+                                        </span>
+
+                                        <button
+                                            onClick={() => increaseQuantity(tier.id)}
+                                            disabled={totalQuantity >= 5}
+                                            className={cn(
+                                                'w-8 h-8 rounded-full flex items-center justify-center transition-all',
+                                                totalQuantity >= 5
+                                                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'
+                                            )}
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Quantity Selector */}
-                    <div className="glass-card p-6 mb-6">
-                        <h2 className="heading text-lg text-white mb-4">Quantity</h2>
-
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={decreaseQuantity}
-                                    disabled={quantity <= 1}
-                                    className={cn(
-                                        'w-12 h-12 rounded-full flex items-center justify-center transition-all',
-                                        quantity <= 1
-                                            ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                                            : 'bg-white/10 text-white hover:bg-white/20'
-                                    )}
-                                >
-                                    <Minus className="w-5 h-5" />
-                                </button>
-
-                                <span className="mono text-3xl text-white font-bold w-12 text-center">
-                                    {quantity}
-                                </span>
-
-                                <button
-                                    onClick={increaseQuantity}
-                                    disabled={quantity >= 5}
-                                    className={cn(
-                                        'w-12 h-12 rounded-full flex items-center justify-center transition-all',
-                                        quantity >= 5
-                                            ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                                            : 'bg-white/10 text-white hover:bg-white/20'
-                                    )}
-                                >
-                                    <Plus className="w-5 h-5" />
-                                </button>
+                    {/* Order Summary */}
+                    {totalQuantity > 0 && (
+                        <div className="glass-card p-6 mb-6">
+                            <h2 className="heading text-lg text-white mb-4">Order Summary</h2>
+                            <div className="space-y-2 mb-4">
+                                {tiers.filter(t => tierQuantities[t.id] > 0).map(tier => (
+                                    <div key={tier.id} className="flex justify-between text-sm">
+                                        <span className="text-white/70">{tierQuantities[tier.id]}x {tier.name}</span>
+                                        <span className="mono text-white/90">{formatUSD(tier.price * tierQuantities[tier.id])}</span>
+                                    </div>
+                                ))}
                             </div>
-
-                            <div className="text-right">
-                                <p className="text-xs text-white/50 mb-1">Total</p>
-                                <p className="mono text-2xl text-purple-400 font-bold">
-                                    {formatUSD(totalPrice)}
-                                </p>
-                                {solEquivalent && (
-                                    <p className="text-xs text-white/40 mt-0.5">
-                                        {solPriceLoading ? '...' : `≈ ${solEquivalent}`}
+                            <div className="flex justify-between items-end border-t border-white/10 pt-4">
+                                <span className="text-white font-medium">Total</span>
+                                <div className="text-right">
+                                    <p className="mono text-2xl text-purple-400 font-bold">
+                                        {formatUSD(totalPrice)}
                                     </p>
-                                )}
+                                    {solEquivalent && (
+                                        <p className="text-xs text-white/40 mt-0.5">
+                                            {solPriceLoading ? '...' : `≈ ${solEquivalent}`}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
-
-                        <p className="text-xs text-white/40 mt-3 text-center">
-                            Maximum 5 tickets per transaction
-                        </p>
-                    </div>
+                    )}
 
                     {/* Purchase Section */}
                     <AnimatePresence mode="wait">
@@ -552,8 +565,8 @@ export default function EventPage({ params }: EventPageProps) {
                                     </button>
                                 ) : (
                                     <SwipeButton
-                                        onComplete={handlePurchase}
-                                        label={purchasing ? 'Processing...' : `Buy ${quantity} Ticket${quantity > 1 ? 's' : ''} - ${formatUSD(selectedTier?.price! * quantity)}`}
+                                        onComplete={totalQuantity > 0 ? handlePurchase : undefined}
+                                        label={purchasing ? 'Processing...' : (totalQuantity === 0 ? 'Select Tickets to Buy' : `Buy ${totalQuantity} Ticket${totalQuantity > 1 ? 's' : ''} - ${formatUSD(totalPrice)}`)}
                                     />
                                 )}
                             </motion.div>
@@ -569,10 +582,10 @@ export default function EventPage({ params }: EventPageProps) {
                                     <Check className="w-10 h-10 text-emerald-400" />
                                 </div>
                                 <h3 className="heading text-xl text-white mb-2">
-                                    {quantity > 1 ? `${quantity} Tickets Purchased!` : 'Ticket Purchased!'}
+                                    {totalQuantity > 1 ? `${totalQuantity} Tickets Purchased!` : 'Ticket Purchased!'}
                                 </h3>
                                 <p className="text-white/60 text-sm mb-6">
-                                    Your {quantity > 1 ? 'tickets have' : 'ticket has'} been added to your wallet.
+                                    Your {totalQuantity > 1 ? 'tickets have' : 'ticket has'} been added to your wallet.
                                 </p>
                                 <Link
                                     href="/tickets"

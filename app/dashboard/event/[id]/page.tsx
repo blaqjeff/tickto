@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, DollarSign, Users, Activity, Ticket, Loader2, Calendar, MapPin } from 'lucide-react';
+import { ArrowLeft, DollarSign, Users, Activity, Ticket, Loader2, Calendar, MapPin, QrCode, Link as LinkIcon, Copy, Trash2 } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabaseClient';
 import { getEventById } from '@/lib/api';
@@ -27,6 +27,23 @@ export default function EventAnalyticsPage({ params }: EventAnalyticsPageProps) 
     const [totalRevenue, setTotalRevenue] = useState(0);
     const [ticketsSold, setTicketsSold] = useState(0);
     const [loyalFans, setLoyalFans] = useState(0);
+
+    // Scanner Links
+    const [scannerTokens, setScannerTokens] = useState<any[]>([]);
+    const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+    const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+    const fetchScannerTokens = async () => {
+        try {
+            const res = await fetch(`/api/magic-link?event_id=${id}`);
+            const data = await res.json();
+            if (data.success) {
+                setScannerTokens(data.tokens || []);
+            }
+        } catch (err) {
+            console.error("Failed to fetch scanner tokens", err);
+        }
+    };
 
     useEffect(() => {
         if (!ready || !user) return;
@@ -79,7 +96,49 @@ export default function EventAnalyticsPage({ params }: EventAnalyticsPageProps) 
         };
 
         loadEventAnalytics();
+        fetchScannerTokens();
     }, [id, ready, user, router]);
+
+    const generateScannerLink = async () => {
+        if (isGeneratingLink) return;
+        setIsGeneratingLink(true);
+        try {
+            const res = await fetch('/api/magic-link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ event_id: id })
+            });
+            const data = await res.json();
+            if (data.success) {
+                await fetchScannerTokens();
+            }
+        } catch (err) {
+            console.error("Failed to generate token", err);
+        } finally {
+            setIsGeneratingLink(false);
+        }
+    };
+
+    const revokeToken = async (token: string) => {
+        if (!confirm("Are you sure you want to revoke this link? Anyone using it will immediately lose scanner access.")) return;
+        try {
+            await fetch('/api/magic-link', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            await fetchScannerTokens();
+        } catch (err) {
+            console.error("Failed to revoke token", err);
+        }
+    };
+
+    const copyToClipboard = (token: string) => {
+        const link = `${window.location.origin}/scan/${id}?token=${token}`;
+        navigator.clipboard.writeText(link);
+        setCopiedToken(token);
+        setTimeout(() => setCopiedToken(null), 2000);
+    };
 
     if (isLoading) {
         return (
@@ -199,6 +258,73 @@ export default function EventAnalyticsPage({ params }: EventAnalyticsPageProps) 
                             style={{ width: `${Math.min(100, (ticketsSold / Math.max(1, event.total_tickets || 1)) * 100)}%` }}
                         />
                     </div>
+                </GlassCardSimple>
+            </div>
+
+            {/* Scanner Link Management */}
+            <div className="mb-8">
+                <GlassCardSimple className="p-6 md:p-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative">
+                        <div>
+                            <h2 className="heading text-xl text-white mb-2 flex items-center gap-2">
+                                <QrCode className="w-5 h-5 text-purple-400" />
+                                Door Management & Scanning
+                            </h2>
+                            <p className="text-sm text-neutral-400 max-w-xl">
+                                Generate secure "Magic Links" for your staff. Staff open the link on their phone and can scan tickets immediately. No login required.
+                            </p>
+                        </div>
+                        <button
+                            onClick={generateScannerLink}
+                            disabled={isGeneratingLink}
+                            className="shrink-0 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all active:scale-95"
+                        >
+                            {isGeneratingLink ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
+                            Generate Scanner Link
+                        </button>
+                    </div>
+
+                    {scannerTokens.length > 0 ? (
+                        <div className="space-y-3">
+                            {scannerTokens.map((tokenObj) => (
+                                <div key={tokenObj.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-white/10 bg-black/40">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0">
+                                            <QrCode className="w-5 h-5 text-neutral-400" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-white text-sm font-medium truncate">...{tokenObj.token.slice(-8)}</p>
+                                            <p className="text-xs text-neutral-500 mt-0.5">Created {formatDate(tokenObj.created_at)}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                            onClick={() => copyToClipboard(tokenObj.token)}
+                                            className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors flex items-center gap-2 border border-white/5"
+                                        >
+                                            {copiedToken === tokenObj.token ? (
+                                                <span className="text-green-400 flex items-center gap-1">Copied!</span>
+                                            ) : (
+                                                <><Copy className="w-4 h-4" /> Copy Link</>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => revokeToken(tokenObj.token)}
+                                            className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-medium transition-colors border border-red-500/10"
+                                            title="Revoke access"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 border border-white/5 border-dashed rounded-xl bg-white/5">
+                            <p className="text-neutral-400 text-sm">No active scanner links.</p>
+                        </div>
+                    )}
                 </GlassCardSimple>
             </div>
 

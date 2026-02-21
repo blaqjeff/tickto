@@ -17,7 +17,8 @@ interface EventRow {
     organizer: string;
     category: string;
     featured: boolean;
-    tiers: TicketTier[] | null;
+    tiers?: TicketTier[] | null;
+    ticket_tiers?: TicketTier[] | null;
     price_usd: number | null;
     organizer_wallet: string | null;
     owner_id: string;
@@ -42,7 +43,7 @@ function transformEvent(row: EventRow): Event & { image_url?: string } {
         organizer: row.organizer,
         category: row.category as Event['category'],
         featured: row.featured,
-        tiers: row.tiers || [],
+        tiers: row.ticket_tiers || row.tiers || [],
         price_usd: row.price_usd || 0,
         organizer_wallet: row.organizer_wallet || undefined,
         owner_id: row.owner_id,
