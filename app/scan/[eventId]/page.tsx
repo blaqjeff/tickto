@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 
 export default function ScanPage({ params }: { params: Promise<{ eventId: string }> }) {
@@ -18,15 +18,20 @@ export default function ScanPage({ params }: { params: Promise<{ eventId: string
 
     const [isPending, setIsPending] = useState(false);
     const isProcessingRef = useRef(false);
+    const recentScansRef = useRef<Map<string, number>>(new Map());
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
     useEffect(() => {
         if (!token) return;
 
-        // Initialize scanner
+        // Initialize scanner with high-performance config
         const scanner = new Html5QrcodeScanner(
             "reader",
-            { fps: 10, qrbox: { width: 250, height: 250 } },
+            {
+                fps: 15,
+                qrbox: { width: 250, height: 250 },
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            },
             false
         );
         scannerRef.current = scanner;
@@ -34,7 +39,18 @@ export default function ScanPage({ params }: { params: Promise<{ eventId: string
         scanner.render(onScanSuccess, onScanFailure);
 
         async function onScanSuccess(decodedText: string) {
-            if (isProcessingRef.current) return; // Prevent double scans
+            // Check recent scans cache (prevent double scans within 5 seconds)
+            const now = Date.now();
+            const lastScanTime = recentScansRef.current.get(decodedText);
+
+            if (lastScanTime && (now - lastScanTime < 5000)) {
+                return; // Silently ignore duplicate scan
+            }
+
+            if (isProcessingRef.current) return;
+
+            // Record this scan attempt
+            recentScansRef.current.set(decodedText, now);
 
             isProcessingRef.current = true;
             setIsPending(true);

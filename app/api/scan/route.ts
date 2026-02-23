@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const runtime = 'edge';
+
 // Initialize Supabase Admin client to bypass RLS for scanner validation
 // We use the service_role key because volunteers scanning tickets are typically not authenticated users
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
