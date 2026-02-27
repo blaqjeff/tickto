@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Search, CalendarDays, Trash2, Edit, AlertCircle, Eye, Tag, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabaseClient';
+import { deleteEventAdmin } from '../actions';
 
 export default function AdminEventsPage() {
+    const { user } = usePrivy();
     const [searchQuery, setSearchQuery] = useState('');
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -49,22 +52,26 @@ export default function AdminEventsPage() {
     };
 
     const deleteEvent = async (eventId: string) => {
-        if (!confirm('Are you sure you want to delete this event?')) return;
+        if (!user?.id) {
+            alert("You must be logged in to perform this action.");
+            return;
+        }
+
+        if (!confirm('Are you sure you want to delete this event? This action will hide it from the platform.')) return;
 
         try {
-            const { error } = await supabase
-                .from('events')
-                .update({ status: 'deleted' })
-                .eq('id', eventId);
+            const { success, error } = await deleteEventAdmin(eventId, user.id);
 
-            if (error) throw error;
+            if (!success) {
+                throw new Error(error || 'Failed to communicate with DB');
+            }
 
             setEvents(events.map(e =>
                 e.id === eventId ? { ...e, status: 'deleted' } : e
             ));
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error deleting event:", err);
-            alert("Failed to delete event.");
+            alert(`Failed to delete event: ${err.message}`);
         }
     };
 
