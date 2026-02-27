@@ -27,46 +27,9 @@ pub mod tickto_tickets {
         event_config.max_supply = max_supply;
         event_config.tickets_minted = 0;
 
-        // Create Tree Config (Bubblegum V2)
-        // We use the CPI builder pattern
         // Note: The actual Merkle tree account initialization (system program create account + spl-compression init)
-        // is expected to be done by the client or a separate instruction if we want to do it all on-chain.
-        // However, Bubblegum's create_tree_config requires the tree to be initialized.
-        // Here we assume the client checks if tree is initialized, or we do it here.
-        // For simplicity, we assume tree account is already created and initialized by client logic
-        // OR we can do it here if we add spl-compression CPI.
-        // But the task is about Ticket Minting logic. Let's assume standard bubblegum flow.
-        
-        // Actual CPI to Bubblegum to Create Tree Config
-        let tree_config_info = ctx.accounts.tree_config.to_account_info();
-        let merkle_tree_info = ctx.accounts.merkle_tree.to_account_info();
-        let payer_info = ctx.accounts.organizer.to_account_info();
-        let tree_creator_info = event_config.to_account_info();
-        let log_wrapper_info = ctx.accounts.log_wrapper.to_account_info();
-        let compression_program_info = ctx.accounts.compression_program.to_account_info();
-        let system_program_info = ctx.accounts.system_program.to_account_info();
-
-        let bubblegum_program_info = ctx.accounts.bubblegum_program.to_account_info();
-        let mut cpi_builder = CreateTreeConfigV2CpiBuilder::new(
-            &bubblegum_program_info
-        );
-
-        cpi_builder
-            .tree_config(&tree_config_info)
-            .merkle_tree(&merkle_tree_info)
-            .payer(&payer_info)
-            .tree_creator(Some(&tree_creator_info)) // Wrapped in Some()
-            .log_wrapper(&log_wrapper_info)
-            .compression_program(&compression_program_info)
-            .system_program(&system_program_info)
-            .max_depth(17) // 100k+ capacity
-            .max_buffer_size(64)
-            .public(false) // Only this program (via PDA delegate) can mint
-            .invoke_signed(&[&[
-                b"event",
-                event_config.event_id.as_bytes(),
-                &[ctx.bumps.event_config],
-            ]])?;
+        // and the Bubblegum create_tree_config are now handled OUTSIDE the program as a one-time global setup.
+        // We simply store the designated shared tree pubkey in the EventConfig here.
 
         Ok(())
     }
@@ -92,7 +55,10 @@ pub mod tickto_tickets {
         // For now, we use placeholders or simple data.
         
         let metadata = MetadataArgsV2 {
-            name: format!("TiCkTo Event #{}", event_config.event_id),
+            name: {
+                let full = format!("TiCkTo #{}", &event_config.event_id[..8.min(event_config.event_id.len())]);
+                if full.len() > 32 { full[..32].to_string() } else { full }
+            },
             symbol: "TICK".to_string(),
             uri: "https://tickto.com/metadata/placeholder".to_string(),
             seller_fee_basis_points: 0,
@@ -108,18 +74,19 @@ pub mod tickto_tickets {
             }],
         };
 
-        // Prepare AccountInfos for CPI to avoid temporary value dropped errors
+        // Prepare AccountInfos for CPI
         let tree_config_info = ctx.accounts.tree_config.to_account_info();
         let leaf_owner_info = ctx.accounts.buyer.to_account_info();
-        let leaf_delegate_info = ctx.accounts.buyer.to_account_info();
+        let leaf_delegate_info = ctx.accounts.master_tree_authority.to_account_info();
         let merkle_tree_info = ctx.accounts.merkle_tree.to_account_info();
         let payer_info = ctx.accounts.buyer.to_account_info();
-        let tree_creator_or_delegate_info = event_config.to_account_info();
+        let tree_creator_or_delegate_info = ctx.accounts.master_tree_authority.to_account_info();
         let log_wrapper_info = ctx.accounts.log_wrapper.to_account_info();
         let compression_program_info = ctx.accounts.compression_program.to_account_info();
         let system_program_info = ctx.accounts.system_program.to_account_info();
         
         let bubblegum_program_info = ctx.accounts.bubblegum_program.to_account_info();
+        let mpl_core_program_info = ctx.accounts.mpl_core_program.to_account_info();
         let mut cpi_builder = MintV2CpiBuilder::new(
             &bubblegum_program_info
         );
@@ -130,15 +97,15 @@ pub mod tickto_tickets {
             .leaf_delegate(Some(&leaf_delegate_info)) // Optional
             .merkle_tree(&merkle_tree_info)
             .payer(&payer_info)
-            .tree_creator_or_delegate(Some(&tree_creator_or_delegate_info)) // The Event PDA is the delegate
+            .tree_creator_or_delegate(Some(&tree_creator_or_delegate_info)) // The Master PDA is the delegate
             .log_wrapper(&log_wrapper_info)
             .compression_program(&compression_program_info)
             .system_program(&system_program_info)
+            .mpl_core_program(&mpl_core_program_info)
             .metadata(metadata)
             .invoke_signed(&[&[
-                b"event",
-                event_config.event_id.as_bytes(),
-                &[event_config.bump], // Use the stored bump directly
+                b"master_tree",
+                &[ctx.bumps.master_tree_authority], // Use the PDA bump to sign
             ]])?;
 
         Ok(())
@@ -152,13 +119,10 @@ pub mod tickto_tickets {
         nonce: u64,
         index: u32,
     ) -> Result<()> {
-        // Burn verification logic
-        // The LeafOwner (buyer) must sign.
-        
-        // Prepare AccountInfos
         let bubblegum_program_info = ctx.accounts.bubblegum_program.to_account_info();
         let tree_config_info = ctx.accounts.tree_config.to_account_info();
         let leaf_owner_info = ctx.accounts.leaf_owner.to_account_info();
+        let leaf_delegate_info = ctx.accounts.master_tree_authority.to_account_info();
         let merkle_tree_info = ctx.accounts.merkle_tree.to_account_info();
         let log_wrapper_info = ctx.accounts.log_wrapper.to_account_info();
         let compression_program_info = ctx.accounts.compression_program.to_account_info();
@@ -168,7 +132,8 @@ pub mod tickto_tickets {
 
         cpi_builder
             .tree_config(&tree_config_info)
-            .leaf_owner(&leaf_owner_info) // Signer (removed redundant `true` arg)
+            .leaf_owner(&leaf_owner_info)
+            .leaf_delegate(Some(&leaf_delegate_info))
             .merkle_tree(&merkle_tree_info)
             .log_wrapper(&log_wrapper_info)
             .compression_program(&compression_program_info)
@@ -179,12 +144,14 @@ pub mod tickto_tickets {
             .nonce(nonce)
             .index(index);
             
-        // Add remaining accounts for proof
         for account in ctx.remaining_accounts.iter() {
             cpi_builder.add_remaining_account(account, false, false);
         }
 
-        cpi_builder.invoke()?;
+        cpi_builder.invoke_signed(&[&[
+            b"master_tree",
+            &[ctx.bumps.master_tree_authority],
+        ]])?;
 
         Ok(())
     }
@@ -199,26 +166,21 @@ pub struct CreateEvent<'info> {
     #[account(
         init,
         payer = organizer,
-        space = 8 + 32 + 32 + 4 + 8 + 4 + 4, // Adjust space as needed
+        space = 8    // Anchor discriminator
+             + 32   // organizer: Pubkey
+             + (4 + 64) // event_id: String (4 byte len prefix + max 64 chars)
+             + 1    // bump: u8
+             + 32   // merkle_tree: Pubkey
+             + 4    // max_supply: u32
+             + 4,   // tickets_minted: u32
+             // Total: 149 bytes
         seeds = [b"event", event_id.as_bytes()],
         bump
     )]
     pub event_config: Account<'info, EventConfig>,
 
-    /// CHECK: Validated by Bubblegum CPI
-    #[account(mut)]
-    pub tree_config: UncheckedAccount<'info>,
-
-    /// CHECK: Validated by Bubblegum CPI
-    #[account(mut)]
+    /// CHECK: Merely defining the associated tree, not interacting with it yet
     pub merkle_tree: UncheckedAccount<'info>,
-
-    /// CHECK: Metaplex Bubblegum Program ID
-    pub bubblegum_program: UncheckedAccount<'info>,
-    /// CHECK: SPL Account Compression Program ID
-    pub compression_program: UncheckedAccount<'info>,
-    /// CHECK: SPL Noop Program ID
-    pub log_wrapper: UncheckedAccount<'info>,
     
     pub system_program: Program<'info, System>,
 }
@@ -240,6 +202,13 @@ pub struct MintTicket<'info> {
     )]
     pub event_config: Account<'info, EventConfig>,
 
+    /// CHECK: The PDA acting as the global shared tree delegate
+    #[account(
+        seeds = [b"master_tree"],
+        bump
+    )]
+    pub master_tree_authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated by Bubblegum CPI
     #[account(mut)]
     pub tree_config: UncheckedAccount<'info>,
@@ -254,13 +223,28 @@ pub struct MintTicket<'info> {
     pub compression_program: UncheckedAccount<'info>,
     /// CHECK: SPL Noop Program ID
     pub log_wrapper: UncheckedAccount<'info>,
+    /// CHECK: MPL Core Program ID (required by Bubblegum V2)
+    pub mpl_core_program: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct BurnTicket<'info> {
-    pub leaf_owner: Signer<'info>,
+    /// CHECK: The PDA acting as the global shared tree delegate
+    #[account(
+        mut,
+        seeds = [b"master_tree"],
+        bump
+    )]
+    pub master_tree_authority: UncheckedAccount<'info>,
+
+    /// CHECK: Leaf owner doesn't need to sign since we have the PDA delegate
+    pub leaf_owner: UncheckedAccount<'info>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>, // Backend admin wallet paying gas
+
 
     /// CHECK: Validated by Bubblegum CPI
     #[account(mut)]

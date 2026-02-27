@@ -21,7 +21,35 @@
       ],
       "accounts": [
         {
-          "name": "leaf_owner",
+          "name": "master_tree_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  115,
+                  116,
+                  101,
+                  114,
+                  95,
+                  116,
+                  114,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "leaf_owner"
+        },
+        {
+          "name": "payer",
+          "writable": true,
           "signer": true
         },
         {
@@ -125,21 +153,7 @@
           }
         },
         {
-          "name": "tree_config",
-          "writable": true
-        },
-        {
-          "name": "merkle_tree",
-          "writable": true
-        },
-        {
-          "name": "bubblegum_program"
-        },
-        {
-          "name": "compression_program"
-        },
-        {
-          "name": "log_wrapper"
+          "name": "merkle_tree"
         },
         {
           "name": "system_program",
@@ -214,6 +228,29 @@
           }
         },
         {
+          "name": "master_tree_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  115,
+                  116,
+                  101,
+                  114,
+                  95,
+                  116,
+                  114,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "tree_config",
           "writable": true
         },
@@ -229,6 +266,9 @@
         },
         {
           "name": "log_wrapper"
+        },
+        {
+          "name": "mpl_core_program"
         },
         {
           "name": "system_program",

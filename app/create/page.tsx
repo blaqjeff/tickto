@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { useWallets } from '@privy-io/react-auth/solana';
+import { useWallets, useSignTransaction } from '@privy-io/react-auth/solana';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Upload, Calendar, MapPin, Plus, Trash2, Ticket } from 'lucide-react';
+import { Loader2, Upload, Calendar, MapPin, Plus, Trash2, Ticket, Copy, Check, ExternalLink, Share2, PartyPopper } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { TicktoClient } from '@/lib/tickto-program';
-import { useSignAndSendTransaction } from '@privy-io/react-auth/solana';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 
@@ -23,12 +22,14 @@ interface TicketTier {
 export default function CreateEventPage() {
     const { ready, authenticated, user } = usePrivy();
     const { wallets } = useWallets();
-    const { signAndSendTransaction } = useSignAndSendTransaction();
+    const { signTransaction } = useSignTransaction();
     const router = useRouter();
 
     const [isLoading, setIsLoading] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [createdEvent, setCreatedEvent] = useState<{ id: string; title: string; txSignature?: string } | null>(null);
+    const [copied, setCopied] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -169,28 +170,26 @@ export default function CreateEventPage() {
 
             // 6. On-Chain Anchor Setup via TicktoClient
             try {
-                // [MVP BYPASS] 
-                // Creating a cNFT Merkle Tree on-chain requires generating a keypair, 
-                // calling SystemProgram.createAccount for the tree size, and spl-account-compression Init.
-                // Since this isn't fully wired up, the mocked PublickKey('1111...') causes the Bubblegum CPI to hard crash.
-                // We bypass the transaction prompt here to prevent the scary error modal for testers.
+                console.log("Setting up Event on Solana via Shared Merkle Tree...");
 
-                console.log("MVP Bypass: Skipping on-chain event creation to avoid Merkle Tree crash.");
-                await new Promise(resolve => setTimeout(resolve, 800)); // Simulate transaction delay
-
-                // --- ORIGINAL ON-CHAIN CODE (DISABLED FOR MVP) ---
-                /*
                 const solanaWallet = wallets[0];
                 if (!solanaWallet?.address) throw new Error("No connected Solana wallet.");
+
+                // Debug: log wallet state to help diagnose connectivity issues
+                console.log("Wallet state:", {
+                    address: solanaWallet.address,
+                    walletsCount: wallets.length,
+                });
 
                 const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
                 const ticktoClient = new TicktoClient(connection);
 
-                // Use a mocked generic Merkle tree since we aren't creating them dynamically yet
-                const merkleTreeStr = "11111111111111111111111111111111"; // MUST REPLACE in prod
-                const merkleTreePubKey = new PublicKey(merkleTreeStr);
+                // Load Shared Tree Pubkey from environment
+                const sharedTreeStr = process.env.NEXT_PUBLIC_SHARED_MERKLE_TREE_PUBKEY;
+                if (!sharedTreeStr) throw new Error("System Error: No shared Merkle tree configured.");
+                const merkleTreePubKey = new PublicKey(sharedTreeStr);
 
-                // Assuming `data` contains the inserted row with its shiny new UUID (event.id)
+                // Use the returned UUID as the definitive ID
                 const eventId = data?.[0]?.id || payload.title.replace(/\s+/g, '-').toLowerCase() + '-' + Date.now();
 
                 const createEventIx = await ticktoClient.createCreateEventIx(
@@ -213,21 +212,43 @@ export default function CreateEventPage() {
                     verifySignatures: false,
                 });
 
-                console.log("Broadcasting createEvent to Solana...");
-                await signAndSendTransaction({
+                console.log("Requesting signature for createEvent tx (devnet)...");
+                console.log("User linked accounts:", JSON.stringify(user?.linkedAccounts?.filter((a: any) => a.chainType === 'solana'), null, 2));
+
+                // Step 1: Sign the transaction via Privy (user approves in popup)
+                const signResult = await signTransaction({
                     transaction: new Uint8Array(serializedTx),
                     wallet: solanaWallet,
                     chain: 'solana:devnet',
                 });
-                */
+                console.log("Transaction signed! Sending to network...");
 
-                // (Optional) Update Supabase row with the `merkleTree` and PDA here
+                // Step 2: Send the signed transaction directly via our RPC
+                const signedTxBytes = signResult.signedTransaction;
+                const txSignature = await connection.sendRawTransaction(signedTxBytes, {
+                    skipPreflight: false,
+                    preflightCommitment: 'confirmed',
+                });
+
+                // Step 3: Confirm the transaction
+                const confirmation = await connection.confirmTransaction(txSignature, 'confirmed');
+                if (confirmation.value.err) {
+                    throw new Error(`Transaction confirmed but failed: ${JSON.stringify(confirmation.value.err)}`);
+                }
+
+                console.log("On-chain event created! Signature:", txSignature);
+
+                // Show success screen instead of redirecting
+                setCreatedEvent({
+                    id: eventId,
+                    title: payload.title,
+                    txSignature,
+                });
+
             } catch (chainErr) {
                 console.error("Failed to setup event on-chain:", chainErr);
-                // We don't block the UI here, but in production we'd want atomic consistency
+                alert("Blockchain setup failed, but your event data was saved to the database. Check console details.");
             }
-
-            window.location.href = "/"; // Success - Fresh state redirect
         } catch (err: any) {
             console.error("Create Failed:", err);
             alert(`Error: ${err.message || "Check console"}`);
@@ -235,6 +256,178 @@ export default function CreateEventPage() {
             setIsLoading(false);
         }
     };
+
+    const eventUrl = createdEvent ? `${typeof window !== 'undefined' ? window.location.origin : ''}/event/${createdEvent.id}` : '';
+
+    const copyLink = () => {
+        navigator.clipboard.writeText(eventUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const shareEvent = async () => {
+        if (navigator.share) {
+            await navigator.share({
+                title: createdEvent?.title,
+                text: `Check out ${createdEvent?.title} on Tickto!`,
+                url: eventUrl,
+            });
+        } else {
+            copyLink();
+        }
+    };
+
+    // ─── Success Screen ───────────────────────────────────────
+    if (createdEvent) {
+        return (
+            <div className="px-4 py-8 max-w-lg mx-auto min-h-screen flex flex-col items-center justify-center safe-bottom">
+                {/* Animated particles */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {[...Array(12)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className="absolute w-2 h-2 rounded-full"
+                            style={{
+                                background: ['#a855f7', '#6366f1', '#ec4899', '#f59e0b', '#10b981'][i % 5],
+                                left: `${10 + Math.random() * 80}%`,
+                                top: `${10 + Math.random() * 40}%`,
+                            }}
+                            initial={{ opacity: 0, scale: 0, y: 0 }}
+                            animate={{
+                                opacity: [0, 1, 1, 0],
+                                scale: [0, 1.5, 1, 0.5],
+                                y: [0, -60, -120, -200],
+                                x: [0, (Math.random() - 0.5) * 100],
+                            }}
+                            transition={{
+                                duration: 2.5,
+                                delay: i * 0.12,
+                                ease: 'easeOut',
+                            }}
+                        />
+                    ))}
+                </div>
+
+                {/* Success Icon */}
+                <motion.div
+                    className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center mb-8 shadow-lg shadow-emerald-500/30"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+                >
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.5, type: 'spring', stiffness: 300 }}
+                    >
+                        <Check className="w-12 h-12 text-white" strokeWidth={3} />
+                    </motion.div>
+                </motion.div>
+
+                {/* Congrats Text */}
+                <motion.div
+                    className="text-center mb-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                >
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                        <PartyPopper className="w-6 h-6 text-yellow-400" />
+                        <h1 className="heading text-3xl text-white">Congratulations!</h1>
+                        <PartyPopper className="w-6 h-6 text-yellow-400" style={{ transform: 'scaleX(-1)' }} />
+                    </div>
+                    <p className="text-white/60 text-lg leading-relaxed">
+                        <span className="text-white font-semibold">{createdEvent.title}</span> is now live on Tickto!
+                        Share it with the world!
+                    </p>
+                </motion.div>
+
+                {/* Share Link Card */}
+                <motion.div
+                    className="w-full glass-card p-5 mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                >
+                    <p className="text-white/40 text-xs uppercase tracking-wider mb-3 font-medium">Event Link</p>
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 overflow-hidden">
+                            <p className="text-white/80 text-sm mono truncate">{eventUrl}</p>
+                        </div>
+                        <button
+                            onClick={copyLink}
+                            className="p-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 transition-colors text-purple-400"
+                            title="Copy link"
+                        >
+                            {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+                        </button>
+                    </div>
+                    {copied && (
+                        <motion.p
+                            className="text-emerald-400 text-xs mt-2 text-center"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
+                            Link copied to clipboard!
+                        </motion.p>
+                    )}
+                </motion.div>
+
+                {/* On-chain confirmation */}
+                {createdEvent.txSignature && (
+                    <motion.a
+                        href={`https://explorer.solana.com/tx/${createdEvent.txSignature}?cluster=devnet`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white/30 text-xs flex items-center gap-1 hover:text-white/50 transition-colors mb-6"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                    >
+                        <ExternalLink className="w-3 h-3" />
+                        View on Solana Explorer
+                    </motion.a>
+                )}
+
+                {/* Action Buttons */}
+                <motion.div
+                    className="w-full space-y-3"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                >
+                    <button
+                        onClick={shareEvent}
+                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25 active:scale-[0.98]"
+                    >
+                        <Share2 className="w-5 h-5" />
+                        Share Your Event
+                    </button>
+
+                    <button
+                        onClick={() => router.push(`/event/${createdEvent.id}`)}
+                        className="w-full py-4 rounded-2xl bg-white/10 hover:bg-white/15 transition-colors text-white font-medium flex items-center justify-center gap-2 active:scale-[0.98]"
+                    >
+                        <Ticket className="w-5 h-5" />
+                        View Event Page
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setCreatedEvent(null);
+                            setFormData({ title: '', description: '', date: '', location: '' });
+                            setTiers([{ name: 'General', price: '', quantity: '' }]);
+                            setImageFile(null);
+                            setImagePreview(null);
+                        }}
+                        className="w-full py-3 text-white/40 hover:text-white/60 transition-colors text-sm font-medium"
+                    >
+                        Create Another Event
+                    </button>
+                </motion.div>
+            </div>
+        );
+    }
 
     return (
         <div className="px-4 py-8 max-w-2xl mx-auto min-h-screen safe-bottom">

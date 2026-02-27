@@ -27,7 +27,35 @@ export type TicktoTickets = {
       ],
       "accounts": [
         {
-          "name": "leafOwner",
+          "name": "masterTreeAuthority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  115,
+                  116,
+                  101,
+                  114,
+                  95,
+                  116,
+                  114,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner"
+        },
+        {
+          "name": "payer",
+          "writable": true,
           "signer": true
         },
         {
@@ -131,21 +159,7 @@ export type TicktoTickets = {
           }
         },
         {
-          "name": "treeConfig",
-          "writable": true
-        },
-        {
-          "name": "merkleTree",
-          "writable": true
-        },
-        {
-          "name": "bubblegumProgram"
-        },
-        {
-          "name": "compressionProgram"
-        },
-        {
-          "name": "logWrapper"
+          "name": "merkleTree"
         },
         {
           "name": "systemProgram",
@@ -220,6 +234,29 @@ export type TicktoTickets = {
           }
         },
         {
+          "name": "masterTreeAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  115,
+                  116,
+                  101,
+                  114,
+                  95,
+                  116,
+                  114,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "treeConfig",
           "writable": true
         },
@@ -235,6 +272,9 @@ export type TicktoTickets = {
         },
         {
           "name": "logWrapper"
+        },
+        {
+          "name": "mplCoreProgram"
         },
         {
           "name": "systemProgram",

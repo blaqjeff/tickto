@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calendar, MapPin, Check, Loader2, Plus, Minus, Ticket } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useWallets, useSignAndSendTransaction } from '@privy-io/react-auth/solana';
+import { useWallets, useSignTransaction } from '@privy-io/react-auth/solana';
 import { SwipeButton } from '@/components/ui/SwipeButton';
 import { ConfettiEffect } from '@/components/ui/ConfettiEffect';
 import { formatDate, formatTime } from '@/lib/mock-data';
@@ -47,7 +47,7 @@ export default function EventPage({ params }: EventPageProps) {
     const router = useRouter();
     const { ready, authenticated, user, login } = usePrivy();
     const { wallets } = useWallets();
-    const { signAndSendTransaction } = useSignAndSendTransaction();
+    const { signTransaction } = useSignTransaction();
 
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
@@ -216,19 +216,10 @@ export default function EventPage({ params }: EventPageProps) {
                 // Prepare the TicktoClient
                 const ticktoClient = new TicktoClient(connection); // Read-only, we sign raw manually
 
-                // IMPORTANT: Fetch the Merkle tree from the event data or platform config.
-                // In a production environment, this would be stored alongside the event on Supabase.
-                // For MVP testing, we'll try to use a static test tree or look it up.
-                // Normally: const merkleTreeStr = event.merkle_tree;
-                // Currently returning fake/mocked address for testing if not set
-                const merkleTreeStr = event.merkle_tree || "11111111111111111111111111111111"; // MUST REPLACE
-                let merkleTreePubKey: PublicKey;
-
-                try {
-                    merkleTreePubKey = new PublicKey(merkleTreeStr);
-                } catch {
-                    throw new Error("Invalid Merkle Tree for this event. Event setup is incomplete.");
-                }
+                // Use shared Merkle tree from platform config
+                const sharedTreeStr = process.env.NEXT_PUBLIC_SHARED_MERKLE_TREE_PUBKEY;
+                if (!sharedTreeStr) throw new Error("System Error: No shared Merkle tree configured.");
+                const merkleTreePubKey = new PublicKey(sharedTreeStr);
 
                 // 1. SOL Transfer Instruction to Organizer
                 const transferIx = SystemProgram.transfer({
@@ -237,23 +228,18 @@ export default function EventPage({ params }: EventPageProps) {
                     lamports: lamports,
                 });
 
-                // 2. Mint Ticket Instruction to Bubblegum
-                // We use our TicktoClient helper to generate the instruction
+                // 2. Mint Ticket cNFT via Bubblegum
                 const mintIx = await ticktoClient.createMintTicketIx(
                     fromPubkey,     // buyer
                     toPubkey,       // organizer
                     event.id,       // eventId
-                    merkleTreePubKey // merkleTree
+                    merkleTreePubKey // shared merkle tree
                 );
 
-                // Create the atomic transaction
+                // Create atomic transaction: SOL transfer + cNFT mint
                 const transaction = new Transaction()
-                    .add(transferIx);
-
-                // Only enforce atomic minting if a valid (non-dummy) Merkle tree exists
-                if (event.merkle_tree && event.merkle_tree !== "11111111111111111111111111111111") {
-                    transaction.add(mintIx);
-                }
+                    .add(transferIx)
+                    .add(mintIx);
 
                 // Get latest blockhash
                 const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
@@ -266,20 +252,28 @@ export default function EventPage({ params }: EventPageProps) {
                     verifySignatures: false,
                 });
 
-                // Use Privy v3's signAndSendTransaction hook (works for embedded + external wallets)
-                const result = await signAndSendTransaction({
+                // Step 1: Sign the transaction via Privy
+                console.log("Requesting signature for ticket purchase (devnet)...");
+                const signResult = await signTransaction({
                     transaction: new Uint8Array(serializedTx),
                     wallet: solanaWallet,
                     chain: 'solana:devnet',
                 });
 
-                // Extract signature from result
-                const sigBytes = result.signature;
-                // Convert Uint8Array signature to base58 string
-                const { base58 } = await import('@scure/base');
-                signature = base58.encode(sigBytes);
+                // Step 2: Send the signed transaction via our RPC
+                const signedTxBytes = signResult.signedTransaction;
+                signature = await connection.sendRawTransaction(signedTxBytes, {
+                    skipPreflight: false,
+                    preflightCommitment: 'confirmed',
+                });
 
-                console.log("Payment sent & confirmed by Privy! Signature:", signature);
+                // Step 3: Confirm the transaction
+                const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+                if (confirmation.value.err) {
+                    throw new Error(`Transaction failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
+                }
+
+                console.log("Payment + cNFT mint confirmed! Signature:", signature);
             }
 
             // ONLY save ticket after successful payment
@@ -305,6 +299,7 @@ export default function EventPage({ params }: EventPageProps) {
                             on_chain_status: 'minted',
                             minted_at: new Date().toISOString(),
                             price_paid: tier.price,
+                            mint_tx: signature,
                         })
                     );
                     i++;

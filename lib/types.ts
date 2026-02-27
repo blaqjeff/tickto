@@ -17,6 +17,7 @@ export interface Event {
     owner_id?: string;
     organizer_wallet?: string; // Solana address for receiving payments
     merkle_tree?: string; // Anchor Merkle Tree Address
+    status?: 'active' | 'cancelled' | 'deleted'; // Status from Admin Dashboard
 }
 
 export type EventCategory =
@@ -59,6 +60,8 @@ export interface User {
     displayName?: string;
     avatar?: string;
     ticketCount: number;
+    is_admin?: boolean;
+    is_banned?: boolean;
 }
 
 // ===== Transaction Types =====
