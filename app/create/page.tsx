@@ -11,7 +11,8 @@ import { TicktoClient } from '@/lib/tickto-program';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 
-const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+// Use local proxy in the browser, fallback to public devnet
+const SOLANA_RPC_URL = typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : 'https://api.devnet.solana.com';
 
 interface TicketTier {
     name: string;

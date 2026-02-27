@@ -40,7 +40,8 @@ interface TierOption {
 // formatUSD is imported from '@/lib/jupiter'
 
 // Solana RPC endpoint (use environment variable with devnet fallback)
-const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+// Use local proxy in the browser, fallback to public devnet
+const SOLANA_RPC_URL = typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : 'https://api.devnet.solana.com';
 
 export default function EventPage({ params }: EventPageProps) {
     const { id } = use(params);

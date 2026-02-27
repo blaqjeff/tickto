@@ -7,19 +7,20 @@ import bs58 from 'bs58';
 export const runtime = 'edge';
 
 // 1. Initialize Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
 
 // 2. Initialize Solana Admin
-const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL!;
-const ADMIN_PK = process.env.SOLANA_ADMIN_PRIVATE_KEY!;
+const RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 const connection = new Connection(RPC_URL, 'confirmed');
 
-// Load Keypair from BS58 string (as in initialize.ts)
-const adminKeypair = Keypair.fromSecretKey(bs58.decode(ADMIN_PK));
-const ticktoClient = new TicktoClient(connection); // Wait, TicktoClient requires anchor wallet? 
-// The client constructs instructions natively without signers locally, signers are added later.
+// Load Keypair: Fallback to a generated one during build if the env var is missing
+const adminKeypair = process.env.SOLANA_ADMIN_PRIVATE_KEY
+    ? Keypair.fromSecretKey(bs58.decode(process.env.SOLANA_ADMIN_PRIVATE_KEY))
+    : Keypair.generate();
+
+const ticktoClient = new TicktoClient(connection);
 
 const HELIUS_RPC_URL = RPC_URL; // Used for DAS API calls
 

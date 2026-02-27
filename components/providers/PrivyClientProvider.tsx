@@ -10,10 +10,10 @@ interface PrivyClientProviderProps {
     appId: string;
 }
 
-// Use Helius RPC (supports browser CORS) with fallback to public endpoints
-const SOLANA_DEVNET_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
-// Derive WSS URL from the HTTP URL for subscriptions
-const SOLANA_DEVNET_WSS = SOLANA_DEVNET_RPC.replace('https://', 'wss://');
+// Use local proxy in the browser, fallback to public devnet for server-side or subscriptions
+const SOLANA_DEVNET_RPC = typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : 'https://api.devnet.solana.com';
+// Derive WSS URL from public devnet because our proxy only supports HTTP
+const SOLANA_DEVNET_WSS = 'wss://api.devnet.solana.com/';
 
 // Create Solana wallet connectors (enables useWallets() to detect wallets)
 const solanaConnectors = toSolanaWalletConnectors();
