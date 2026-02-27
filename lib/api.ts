@@ -59,6 +59,7 @@ export async function getEvents(): Promise<Event[]> {
     const { data, error } = await supabase
         .from('events')
         .select('*')
+        .neq('status', 'deleted')
         .order('date', { ascending: true });
 
     if (error) {
@@ -85,6 +86,7 @@ export async function getEventById(id: string): Promise<Event | null> {
         .from('events')
         .select('*')
         .eq('id', id)
+        .neq('status', 'deleted')
         .single();
 
     if (error) {
@@ -109,6 +111,7 @@ export async function getFeaturedEvents(): Promise<Event[]> {
         .from('events')
         .select('*')
         .eq('featured', true)
+        .neq('status', 'deleted')
         .order('date', { ascending: true });
 
     if (error) {
@@ -126,6 +129,7 @@ export async function searchEvents(query: string): Promise<Event[]> {
     const { data, error } = await supabase
         .from('events')
         .select('*')
+        .neq('status', 'deleted')
         .or(`title.ilike.%${query}%,venue.ilike.%${query}%,location.ilike.%${query}%`)
         .order('date', { ascending: true });
 

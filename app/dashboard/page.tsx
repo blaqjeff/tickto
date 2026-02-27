@@ -38,6 +38,7 @@ export default function OrganizerDashboard() {
                     .from('events')
                     .select('id, title, date, location, image_url, total_tickets')
                     .eq('owner_id', user.id)
+                    .neq('status', 'deleted')
                     .order('created_at', { ascending: false });
 
                 if (eventsError) throw eventsError;
