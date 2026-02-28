@@ -187,7 +187,10 @@ export default function EventPage({ params }: EventPageProps) {
 
             if (lamports > 0) {
                 // Connect to Solana
-                const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+                const connection = new Connection(SOLANA_RPC_URL, {
+                    commitment: 'confirmed',
+                    wsEndpoint: 'wss://api.devnet.solana.com'
+                });
 
                 // Sanitize and Validate Keys
                 const payerKeyStr = solanaWallet.address?.trim();
@@ -243,8 +246,8 @@ export default function EventPage({ params }: EventPageProps) {
                     .add(mintIx);
 
                 // Get latest blockhash
-                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-                transaction.recentBlockhash = blockhash;
+                const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+                transaction.recentBlockhash = latestBlockhash.blockhash;
                 transaction.feePayer = fromPubkey;
 
                 // Serialize the transaction for Privy's signAndSendTransaction
@@ -269,7 +272,11 @@ export default function EventPage({ params }: EventPageProps) {
                 });
 
                 // Step 3: Confirm the transaction
-                const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+                const confirmation = await connection.confirmTransaction({
+                    signature,
+                    blockhash: latestBlockhash.blockhash,
+                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+                }, 'confirmed');
                 if (confirmation.value.err) {
                     throw new Error(`Transaction failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
                 }

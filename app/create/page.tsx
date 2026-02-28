@@ -182,7 +182,10 @@ export default function CreateEventPage() {
                     walletsCount: wallets.length,
                 });
 
-                const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+                const connection = new Connection(SOLANA_RPC_URL, {
+                    commitment: 'confirmed',
+                    wsEndpoint: 'wss://api.devnet.solana.com'
+                });
                 const ticktoClient = new TicktoClient(connection);
 
                 // Load Shared Tree Pubkey from environment
@@ -204,8 +207,8 @@ export default function CreateEventPage() {
                 );
 
                 const transaction = new Transaction().add(createEventIx);
-                const { blockhash } = await connection.getLatestBlockhash('confirmed');
-                transaction.recentBlockhash = blockhash;
+                const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+                transaction.recentBlockhash = latestBlockhash.blockhash;
                 transaction.feePayer = new PublicKey(organizerWallet);
 
                 const serializedTx = transaction.serialize({
@@ -232,7 +235,11 @@ export default function CreateEventPage() {
                 });
 
                 // Step 3: Confirm the transaction
-                const confirmation = await connection.confirmTransaction(txSignature, 'confirmed');
+                const confirmation = await connection.confirmTransaction({
+                    signature: txSignature,
+                    blockhash: latestBlockhash.blockhash,
+                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+                }, 'confirmed');
                 if (confirmation.value.err) {
                     throw new Error(`Transaction confirmed but failed: ${JSON.stringify(confirmation.value.err)}`);
                 }
