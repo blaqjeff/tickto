@@ -93,7 +93,8 @@ export class TicktoClient {
         buyer: PublicKey,
         organizer: PublicKey,
         eventId: string,
-        merkleTree: PublicKey
+        merkleTree: PublicKey,
+        backendAuthority: PublicKey
     ) {
         const safeEventId = eventId.replace(/-/g, '').substring(0, 32);
 
@@ -113,6 +114,7 @@ export class TicktoClient {
             .mintTicket(safeEventId)
             .accounts({
                 buyer,
+                backendAuthority,
                 organizer,
                 treeConfig: treeConfig,
                 merkleTree: merkleTree,

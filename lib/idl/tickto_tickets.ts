@@ -208,6 +208,14 @@ export type TicktoTickets = {
           "signer": true
         },
         {
+          "name": "backendAuthority",
+          "docs": [
+            "The backend relayer that co-signs to authorize minting (prevents free ticket exploits)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "organizer",
           "writable": true
         },

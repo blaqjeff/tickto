@@ -79,7 +79,7 @@ pub mod tickto_tickets {
         let leaf_owner_info = ctx.accounts.buyer.to_account_info();
         let leaf_delegate_info = ctx.accounts.master_tree_authority.to_account_info();
         let merkle_tree_info = ctx.accounts.merkle_tree.to_account_info();
-        let payer_info = ctx.accounts.buyer.to_account_info();
+        let payer_info = ctx.accounts.backend_authority.to_account_info();
         let tree_creator_or_delegate_info = ctx.accounts.master_tree_authority.to_account_info();
         let log_wrapper_info = ctx.accounts.log_wrapper.to_account_info();
         let compression_program_info = ctx.accounts.compression_program.to_account_info();
@@ -190,6 +190,10 @@ pub struct CreateEvent<'info> {
 pub struct MintTicket<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
+
+    /// The backend relayer that co-signs to authorize minting (prevents free ticket exploits)
+    #[account(mut)]
+    pub backend_authority: Signer<'info>,
 
     /// CHECK: Funds destination
     #[account(mut)]

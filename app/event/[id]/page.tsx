@@ -15,14 +15,11 @@ import { getEventById } from '@/lib/api';
 import { supabase } from '@/lib/supabaseClient';
 import { Event, TransactionState } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { formatUSD, usdToSol, formatSOL, getSolPrice } from '@/lib/jupiter';
-import { TicktoClient } from '@/lib/tickto-program';
+import { formatUSD } from '@/lib/jupiter';
 import {
     Connection,
     PublicKey,
-    Transaction,
-    SystemProgram,
-    LAMPORTS_PER_SOL
+    VersionedTransaction,
 } from '@solana/web3.js';
 
 interface EventPageProps {
@@ -57,8 +54,6 @@ export default function EventPage({ params }: EventPageProps) {
     const [showConfetti, setShowConfetti] = useState(false);
     const [purchasing, setPurchasing] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [solEquivalent, setSolEquivalent] = useState<string | null>(null);
-    const [solPriceLoading, setSolPriceLoading] = useState(false);
 
     // Fetch event from Supabase
     useEffect(() => {
@@ -107,25 +102,7 @@ export default function EventPage({ params }: EventPageProps) {
     const totalQuantity = Object.values(tierQuantities).reduce((sum, q) => sum + q, 0);
     const totalPrice = tiers.reduce((sum, tier) => sum + (tierQuantities[tier.id] || 0) * tier.price, 0);
 
-    // Fetch SOL equivalent when price or quantity changes
-    useEffect(() => {
-        async function fetchSolEquivalent() {
-            if (totalPrice === 0) {
-                setSolEquivalent(null);
-                return;
-            }
-            setSolPriceLoading(true);
-            try {
-                const solAmount = await usdToSol(totalPrice);
-                setSolEquivalent(formatSOL(solAmount));
-            } catch {
-                setSolEquivalent(null);
-            } finally {
-                setSolPriceLoading(false);
-            }
-        }
-        fetchSolEquivalent();
-    }, [totalPrice]);
+
 
     // Quantity controls
     const increaseQuantity = (tierId: string) => {
@@ -177,112 +154,79 @@ export default function EventPage({ params }: EventPageProps) {
         setTxState('processing');
 
         try {
-            // Convert USD price to SOL using Jupiter Price API
-            const solAmount = await usdToSol(totalPrice);
-            const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);
-            console.log(`USD $${totalPrice} → ${solAmount} SOL (${lamports} lamports)`);
+            // Step 1: Call relay to build + sign the transaction server-side
+            console.log('[PURCHASE] Calling relay...');
+            const relayRes = await fetch('/api/relay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventId: event.id,
+                    tierQuantities,
+                    buyerWallet: solanaWallet.address,
+                }),
+            });
 
-            // Skip transaction for free tickets
-            let signature = 'free-ticket';
+            const relayData = await relayRes.json();
 
-            if (lamports > 0) {
-                // Connect to Solana
-                const connection = new Connection(SOLANA_RPC_URL, {
-                    commitment: 'confirmed',
-                    wsEndpoint: 'wss://api.devnet.solana.com'
-                });
+            if (!relayRes.ok) {
+                throw new Error(relayData.error || 'Relay request failed');
+            }
 
-                // Sanitize and Validate Keys
-                const payerKeyStr = solanaWallet.address?.trim();
-                const organizerKeyStr = event.organizer_wallet?.trim();
+            console.log('[PURCHASE] Relay response:', relayData.summary);
 
-                console.log("Keys Debug:", { payer: payerKeyStr, organizer: organizerKeyStr });
+            // Step 2: Deserialize the partially-signed transaction
+            const connection = new Connection(SOLANA_RPC_URL, { commitment: 'confirmed' });
+            const txBytes = Uint8Array.from(Buffer.from(relayData.transaction, 'base64'));
+            const transaction = VersionedTransaction.deserialize(txBytes);
 
-                if (!payerKeyStr || !organizerKeyStr) {
-                    throw new Error("Invalid wallet addresses. Please contact support.");
-                }
+            // Step 3: Sign with user's Privy wallet (adds buyer signature)
+            console.log('[PURCHASE] Requesting user signature...');
+            const signResult = await signTransaction({
+                transaction: transaction.serialize(),
+                wallet: solanaWallet,
+                chain: 'solana:devnet',
+            });
 
-                let fromPubkey: PublicKey;
-                let toPubkey: PublicKey;
+            // Step 4: Send the fully-signed transaction to the network
+            // Use direct Helius RPC for send+confirm (local proxy doesn't support WebSockets)
+            const sendConnection = new Connection('https://api.devnet.solana.com', { commitment: 'confirmed' });
 
-                try {
-                    fromPubkey = new PublicKey(payerKeyStr);
-                } catch (e) {
-                    throw new Error(`Your wallet address is invalid: ${payerKeyStr}`);
-                }
+            console.log('[PURCHASE] Sending signed transaction...');
+            const signature = await sendConnection.sendRawTransaction(signResult.signedTransaction, {
+                skipPreflight: true, // relay already simulated
+                preflightCommitment: 'confirmed',
+            });
+            console.log('[PURCHASE] Tx sent! Signature:', signature);
 
-                try {
-                    toPubkey = new PublicKey(organizerKeyStr);
-                } catch (e) {
-                    throw new Error(`Organizer wallet address is invalid: ${organizerKeyStr}`);
-                }
-
-                // Prepare the TicktoClient
-                const ticktoClient = new TicktoClient(connection); // Read-only, we sign raw manually
-
-                // Use shared Merkle tree from platform config
-                const sharedTreeStr = process.env.NEXT_PUBLIC_SHARED_MERKLE_TREE_PUBKEY;
-                if (!sharedTreeStr) throw new Error("System Error: No shared Merkle tree configured.");
-                const merkleTreePubKey = new PublicKey(sharedTreeStr);
-
-                // 1. SOL Transfer Instruction to Organizer
-                const transferIx = SystemProgram.transfer({
-                    fromPubkey,
-                    toPubkey,
-                    lamports: lamports,
-                });
-
-                // 2. Mint Ticket cNFT via Bubblegum
-                const mintIx = await ticktoClient.createMintTicketIx(
-                    fromPubkey,     // buyer
-                    toPubkey,       // organizer
-                    event.id,       // eventId
-                    merkleTreePubKey // shared merkle tree
-                );
-
-                // Create atomic transaction: SOL transfer + cNFT mint
-                const transaction = new Transaction()
-                    .add(transferIx)
-                    .add(mintIx);
-
-                // Get latest blockhash
-                const latestBlockhash = await connection.getLatestBlockhash('confirmed');
-                transaction.recentBlockhash = latestBlockhash.blockhash;
-                transaction.feePayer = fromPubkey;
-
-                // Serialize the transaction for Privy's signAndSendTransaction
-                const serializedTx = transaction.serialize({
-                    requireAllSignatures: false,
-                    verifySignatures: false,
-                });
-
-                // Step 1: Sign the transaction via Privy
-                console.log("Requesting signature for ticket purchase (devnet)...");
-                const signResult = await signTransaction({
-                    transaction: new Uint8Array(serializedTx),
-                    wallet: solanaWallet,
-                    chain: 'solana:devnet',
-                });
-
-                // Step 2: Send the signed transaction via our RPC
-                const signedTxBytes = signResult.signedTransaction;
-                signature = await connection.sendRawTransaction(signedTxBytes, {
-                    skipPreflight: false,
-                    preflightCommitment: 'confirmed',
-                });
-
-                // Step 3: Confirm the transaction
-                const confirmation = await connection.confirmTransaction({
+            // Step 5: Confirm the transaction with fallback
+            try {
+                const confirmation = await sendConnection.confirmTransaction({
                     signature,
-                    blockhash: latestBlockhash.blockhash,
-                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+                    blockhash: relayData.blockhash,
+                    lastValidBlockHeight: relayData.lastValidBlockHeight,
                 }, 'confirmed');
+
                 if (confirmation.value.err) {
                     throw new Error(`Transaction failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
                 }
-
-                console.log("Payment + cNFT mint confirmed! Signature:", signature);
+            } catch (confirmErr: any) {
+                // If block height exceeded, the tx may STILL have landed — check it
+                if (confirmErr.name === 'TransactionExpiredBlockheightExceededError') {
+                    console.warn('[PURCHASE] Block height exceeded, checking if tx landed...');
+                    const status = await sendConnection.getSignatureStatus(signature);
+                    if (status.value?.confirmationStatus === 'confirmed' || status.value?.confirmationStatus === 'finalized') {
+                        console.log('[PURCHASE] Tx actually confirmed despite timeout!');
+                    } else if (status.value?.err) {
+                        throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+                    } else {
+                        throw new Error('Transaction timed out. It may still confirm — check your wallet in a few minutes.');
+                    }
+                } else {
+                    throw confirmErr;
+                }
             }
+
+            console.log('[PURCHASE] Payment + cNFT mint confirmed! Signature:', signature);
 
             // ONLY save ticket after successful payment
             setTxState('minting');
@@ -518,11 +462,9 @@ export default function EventPage({ params }: EventPageProps) {
                                     <p className="mono text-2xl text-purple-400 font-bold">
                                         {formatUSD(totalPrice)}
                                     </p>
-                                    {solEquivalent && (
-                                        <p className="text-xs text-white/40 mt-0.5">
-                                            {solPriceLoading ? '...' : `≈ ${solEquivalent}`}
-                                        </p>
-                                    )}
+                                    <p className="text-xs text-white/40 mt-0.5">
+                                        Paid in USDC
+                                    </p>
                                 </div>
                             </div>
                         </div>
