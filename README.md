@@ -4,6 +4,8 @@ Tickto is a decentralized, mobile-first Web3 ticketing dApp built on Solana. It 
 
 Tickets are minted as **Compressed NFTs (cNFTs)** on Solana to ensure low-cost minting and absolute verification of authenticity, and they are burned on-chain once redeemed at the venue door.
 
+⚠️ **Note: This is an ongoing project actively under development. New features are being rolled out continuously.**
+
 ---
 
 ## 🚀 Key Value Propositions
@@ -94,7 +96,7 @@ anchor test
 
 ## 📄 License
 
-This project is licensed under a **Non-Commercial Source-Available License**. 
+This project is licensed under the **PolyForm Noncommercial License 1.0.0**.
 
 You are free to view, download, modify, and redistribute the source code for personal, educational, and portfolio/recruitment demonstration purposes. Any commercial use, deployment, or monetization of the software is strictly prohibited without the express written permission of the copyright holder.
 
