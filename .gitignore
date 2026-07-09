@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Internal docs
+TICKTO_PRODUCT_SPEC.md
+DATABASE_SCHEMA.md
+
+# Agent config
+.agent/
