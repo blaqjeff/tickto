@@ -9,6 +9,8 @@ import { createClient } from '@supabase/supabase-js';
 import bs58 from 'bs58';
 import { TicktoClient } from '@/lib/tickto-program';
 
+export const dynamic = 'force-dynamic';
+
 // --- Constants ---
 const USDC_DECIMALS = 6;
 const GAS_REIMBURSEMENT_USDC = 0.02; // 0.02 USDC to cover relayer gas + tree rent costs

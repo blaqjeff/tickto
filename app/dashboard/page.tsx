@@ -111,7 +111,7 @@ export default function OrganizerDashboard() {
     if (isLoading || !ready) {
         return (
             <div className="flex min-h-[50vh] items-center justify-center">
-                <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-white animate-spin" />
             </div>
         );
     }
@@ -125,7 +125,7 @@ export default function OrganizerDashboard() {
                 </div>
                 <Link
                     href="/create"
-                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-neutral-200 transition-colors shrink-0"
+                    className="btn-primary flex items-center gap-2 shrink-0"
                 >
                     <PlusCircle className="w-5 h-5" />
                     Create New Event
@@ -135,48 +135,48 @@ export default function OrganizerDashboard() {
             {/* Quick Stats overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 <GlassCardSimple className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                            <Calendar className="w-6 h-6 text-purple-400" />
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-sm text-neutral-400">Active Events</p>
-                            <h3 className="text-2xl font-bold text-white">{events.length}</h3>
+                            <p className="text-xs text-neutral-400 uppercase tracking-wider">Active Events</p>
+                            <h3 className="text-2xl font-bold text-white mt-1">{events.length}</h3>
                         </div>
                     </div>
                 </GlassCardSimple>
 
-                <Link href="/dashboard/revenue" className="block transition-transform hover:scale-[1.02]">
-                    <GlassCardSimple className="p-6 h-full border border-white/5 hover:border-emerald-500/30 transition-colors">
+                <Link href="/dashboard/revenue" className="block">
+                    <GlassCardSimple className="p-6 h-full border border-white/5 card-hover">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                <DollarSign className="w-6 h-6 text-emerald-400" />
+                            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                <DollarSign className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <p className="text-sm text-neutral-400">Total Revenue</p>
-                                <h3 className="text-2xl font-bold text-white mono">${totalRevenue.toFixed(2)}</h3>
+                                <p className="text-xs text-neutral-400 uppercase tracking-wider">Total Revenue</p>
+                                <h3 className="text-2xl font-bold text-white mt-1 mono">${totalRevenue.toFixed(2)}</h3>
                             </div>
                         </div>
-                        <p className="text-xs text-emerald-400 flex items-center gap-1">
-                            <Activity className="w-3 h-3" />
+                        <p className="text-[11px] text-white/50 flex items-center gap-1">
+                            <Activity className="w-3.5 h-3.5" />
                             All-time sales
                         </p>
                     </GlassCardSimple>
                 </Link>
 
-                <Link href="/dashboard/fans" className="block transition-transform hover:scale-[1.02]">
-                    <GlassCardSimple className="p-6 h-full border border-white/5 hover:border-blue-500/30 transition-colors">
+                <Link href="/dashboard/fans" className="block">
+                    <GlassCardSimple className="p-6 h-full border border-white/5 card-hover">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                <Users className="w-6 h-6 text-blue-400" />
+                            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                <Users className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <p className="text-sm text-neutral-400">Loyal Fans</p>
-                                <h3 className="text-2xl font-bold text-white">{loyalFans}</h3>
+                                <p className="text-xs text-neutral-400 uppercase tracking-wider">Loyal Fans</p>
+                                <h3 className="text-2xl font-bold text-white mt-1">{loyalFans}</h3>
                             </div>
                         </div>
-                        <p className="text-xs text-blue-400 flex items-center gap-1">
-                            <Activity className="w-3 h-3" />
+                        <p className="text-[11px] text-white/50 flex items-center gap-1">
+                            <Activity className="w-3.5 h-3.5" />
                             Unique ticket buyers
                         </p>
                     </GlassCardSimple>
@@ -188,19 +188,19 @@ export default function OrganizerDashboard() {
                 <h2 className="text-xl font-semibold text-white mb-6">Your Events</h2>
 
                 {events.length === 0 ? (
-                    <div className="text-center py-16 px-4 border border-white/10 rounded-3xl bg-white/5 border-dashed">
-                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Calendar className="w-8 h-8 text-neutral-500" />
+                    <div className="text-center py-16 px-4 border border-white/5 rounded-2xl bg-white/5 border-dashed">
+                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-4 text-white/40">
+                            <Calendar className="w-8 h-8" />
                         </div>
                         <h3 className="text-lg font-medium text-white mb-2">No events yet</h3>
-                        <p className="text-neutral-400 max-w-sm mx-auto mb-6">
+                        <p className="text-neutral-400 max-w-sm mx-auto mb-6 text-sm">
                             You haven&apos;t created any events. Host your first experience and start selling tickets.
                         </p>
                         <Link
                             href="/create"
-                            className="inline-flex items-center gap-2 bg-white/10 text-white border border-white/20 px-6 py-3 rounded-full font-medium hover:bg-white/20 transition-colors"
+                            className="btn-secondary"
                         >
-                            <PlusCircle className="w-5 h-5" />
+                            <PlusCircle className="w-4 h-4 inline-block mr-1.5" />
                             Create Event
                         </Link>
                     </div>
@@ -209,22 +209,22 @@ export default function OrganizerDashboard() {
                         {events.map((event, i) => (
                             <motion.div
                                 key={event.id}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 }}
+                                transition={{ delay: i * 0.05 }}
                             >
                                 <Link href={`/dashboard/event/${event.id}`}>
-                                    <GlassCardSimple className="overflow-hidden group h-full flex flex-col hover:border-purple-500/50 transition-colors">
+                                    <GlassCardSimple className="overflow-hidden group h-full flex flex-col card-hover">
                                         <div className="relative h-48 -mx-6 -mt-6 mb-4 overflow-hidden">
                                             <Image
                                                 src={event.image_url || 'https://images.unsplash.com/photo-1545167622-3a6ac156f422'}
                                                 alt={event.title}
                                                 fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                                className="object-cover transition-transform duration-500 group-hover:scale-102"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 to-transparent" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
 
-                                            <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-black/50 backdrop-blur-md text-white border border-white/10">
+                                            <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded text-[11px] font-medium bg-black/60 backdrop-blur-md text-white border border-white/10">
                                                 Manage
                                             </div>
                                         </div>
@@ -243,7 +243,7 @@ export default function OrganizerDashboard() {
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-2">
+                                        <div className="mt-auto pt-4 border-t border-white/5 flex flex-col gap-2">
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-neutral-400">Sold / Capacity</span>
                                                 <span className="text-white font-medium mono">{event.tickets_sold} / {event.total_tickets}</span>
@@ -251,7 +251,7 @@ export default function OrganizerDashboard() {
                                             {/* Progress bar for capacity */}
                                             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-purple-500 rounded-full"
+                                                    className="h-full bg-white rounded-full"
                                                     style={{ width: `${Math.min(100, (event.tickets_sold / Math.max(1, event.total_tickets)) * 100)}%` }}
                                                 />
                                             </div>

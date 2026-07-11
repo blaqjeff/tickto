@@ -84,11 +84,8 @@ export function Navbar() {
             <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 shrink-0">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                        <Ticket className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="heading text-xl text-white">
-                        Tick<span className="text-purple-400">to</span>
+                    <span className="heading text-xl text-white tracking-tight">
+                        Tickto
                     </span>
                 </Link>
 
@@ -102,17 +99,17 @@ export function Navbar() {
                                 key={link.href}
                                 href={link.href}
                                 className={cn(
-                                    'relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2',
+                                    'relative px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center gap-2',
                                     isActive
-                                        ? 'text-white bg-white/10'
-                                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                                        ? 'text-white'
+                                        : 'text-white/40 hover:text-white/80'
                                 )}
                             >
                                 <Icon className="w-4 h-4" />
                                 {link.label}
                                 {isActive && (
                                     <motion.div
-                                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-purple-400 rounded-full"
+                                        className="absolute bottom-0 left-4 right-4 h-0.5 bg-white"
                                         layoutId="desktopNavIndicator"
                                         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                     />
@@ -129,10 +126,10 @@ export function Navbar() {
                             <Link
                                 href="/wallet"
                                 className={cn(
-                                    'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all',
+                                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150',
                                     pathname === '/wallet'
-                                        ? 'bg-white/10 text-white'
-                                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                                        ? 'text-white bg-white/5'
+                                        : 'text-white/40 hover:text-white/80'
                                 )}
                             >
                                 <Wallet className="w-4 h-4" />
@@ -141,14 +138,14 @@ export function Navbar() {
                             <Link
                                 href="/profile"
                                 className={cn(
-                                    'flex items-center gap-2 px-4 py-2 rounded-full border transition-all',
+                                    'flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-150',
                                     pathname === '/profile'
-                                        ? 'border-purple-500 bg-purple-500/10 text-white'
-                                        : 'border-white/10 text-white/70 hover:border-white/20 hover:text-white'
+                                        ? 'border-white bg-white/5 text-white'
+                                        : 'border-white/5 text-white/60 hover:border-white/25 hover:text-white'
                                 )}
                             >
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                                    <User className="w-3 h-3 text-white" />
+                                <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center">
+                                    <User className="w-3 h-3 text-white/80" />
                                 </div>
                                 <span className="mono text-xs">{displayName}</span>
                             </Link>
@@ -156,7 +153,7 @@ export function Navbar() {
                     ) : (
                         <button
                             onClick={login}
-                            className="px-5 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all hover:scale-105 active:scale-95"
+                            className="btn-primary py-1.5 px-4 text-sm font-medium"
                         >
                             Sign In
                         </button>
@@ -165,7 +162,7 @@ export function Navbar() {
 
                 {/* Mobile menu button */}
                 <button
-                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-white/70 hover:bg-white/10 transition-colors"
+                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 transition-colors"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 >
                     {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -175,7 +172,7 @@ export function Navbar() {
             {/* Mobile dropdown menu */}
             {mobileMenuOpen && (
                 <motion.div
-                    className="md:hidden border-t border-white/5 bg-zinc-950/95 backdrop-blur-xl"
+                    className="md:hidden border-t border-white/5 bg-[#121212]"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -190,9 +187,9 @@ export function Navbar() {
                                     href={link.href}
                                     onClick={() => setMobileMenuOpen(false)}
                                     className={cn(
-                                        'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
+                                        'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all',
                                         isActive
-                                            ? 'bg-purple-500/10 text-purple-400'
+                                            ? 'bg-white/5 text-white'
                                             : 'text-white/60 hover:bg-white/5 hover:text-white'
                                     )}
                                 >
@@ -208,7 +205,7 @@ export function Navbar() {
                                     <Link
                                         href="/wallet"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all"
+                                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all"
                                     >
                                         <Wallet className="w-5 h-5" />
                                         Wallet
@@ -216,7 +213,7 @@ export function Navbar() {
                                     <Link
                                         href="/profile"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all"
+                                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all"
                                     >
                                         <User className="w-5 h-5" />
                                         Profile
@@ -225,7 +222,7 @@ export function Navbar() {
                             ) : (
                                 <button
                                     onClick={() => { login(); setMobileMenuOpen(false); }}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium"
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-white text-black text-sm font-medium"
                                 >
                                     Sign In
                                 </button>

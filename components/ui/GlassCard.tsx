@@ -46,10 +46,10 @@ export function GlassCard({
                 }}
                 style={{ transformStyle: 'preserve-3d' }}
             >
-                {/* Front Face */}
+                 {/* Front Face */}
                 <div
                     className={cn(
-                        'flip-card-front glass-card ticket-rip w-full h-full p-6',
+                        'flip-card-front card ticket-rip w-full h-full p-6',
                         'flex flex-col'
                     )}
                     style={{ backfaceVisibility: 'hidden' }}
@@ -60,7 +60,7 @@ export function GlassCard({
                 {/* Back Face (QR Code) */}
                 <div
                     className={cn(
-                        'flip-card-back glass-card ticket-rip w-full h-full p-6',
+                        'flip-card-back card ticket-rip w-full h-full p-6',
                         'flex flex-col items-center justify-center'
                     )}
                     style={{
@@ -76,7 +76,7 @@ export function GlassCard({
 }
 
 /**
- * GlassCardSimple - Non-flipping glass card for event listings
+ * GlassCardSimple - Non-flipping solid card for event listings
  */
 export function GlassCardSimple({
     children,
@@ -90,13 +90,13 @@ export function GlassCardSimple({
     return (
         <motion.div
             className={cn(
-                'glass-card p-6 cursor-pointer',
-                'transition-all duration-300',
+                'card p-6 cursor-pointer',
                 className
             )}
             onClick={onClick}
-            whileHover={{ scale: 1.02, y: -4 }}
+            whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
             {children}
         </motion.div>

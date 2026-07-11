@@ -26,12 +26,12 @@ function ToggleSwitch({
     return (
         <button
             onClick={onToggle}
-            className={`relative w-12 h-7 rounded-full transition-colors ${enabled ? 'bg-purple-500' : 'bg-white/10'
+            className={`relative w-11 h-6 rounded-full transition-colors ${enabled ? 'bg-white' : 'bg-white/10'
                 }`}
         >
             <motion.div
-                className="absolute top-1 w-5 h-5 rounded-full bg-white shadow-lg"
-                animate={{ left: enabled ? 24 : 4 }}
+                className={`absolute top-0.5 w-5 h-5 rounded-full shadow-md ${enabled ? 'bg-black' : 'bg-white'}`}
+                animate={{ left: enabled ? 20 : 2 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
             />
         </button>
@@ -64,16 +64,16 @@ function SettingsItem({
             onClick={handleClick}
             role={toggle ? undefined : "button"}
             tabIndex={toggle ? undefined : 0}
-            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors cursor-pointer ${danger
-                ? 'bg-red-500/10 hover:bg-red-500/20'
-                : 'bg-white/5 hover:bg-white/10'
+            className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-colors cursor-pointer ${danger
+                ? 'bg-red-500/5 hover:bg-red-500/10 border-red-500/10'
+                : 'bg-white/5 border-white/5 hover:bg-white/10'
                 }`}
         >
             <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${danger ? 'bg-red-500/20' : 'bg-purple-500/20'
+                className={`w-10 h-10 rounded-xl flex items-center justify-center border ${danger ? 'bg-red-500/10 border-red-500/20' : 'bg-white/5 border-white/10'
                     }`}
             >
-                <Icon className={`w-5 h-5 ${danger ? 'text-red-400' : 'text-purple-400'}`} />
+                <Icon className={`w-5 h-5 ${danger ? 'text-red-400' : 'text-white/60'}`} />
             </div>
             <div className="flex-1 text-left">
                 <span className={`block text-sm font-medium ${danger ? 'text-red-400' : 'text-white'}`}>
@@ -84,7 +84,7 @@ function SettingsItem({
             {toggle ? (
                 <ToggleSwitch enabled={toggle.enabled} onToggle={toggle.onToggle} />
             ) : (
-                <ChevronRight className="w-5 h-5 text-white/30" />
+                <ChevronRight className="w-4 h-4 text-white/20" />
             )}
         </div>
     );
@@ -146,28 +146,28 @@ export default function ProfilePage() {
             <div className="px-4 py-6 max-w-lg mx-auto min-h-screen flex flex-col">
                 <motion.header
                     className="mb-8"
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
                     <h1 className="heading text-3xl text-white mb-1">Profile</h1>
-                    <p className="text-white/50">Sign in to manage your account</p>
+                    <p className="text-white/40">Sign in to manage your account</p>
                 </motion.header>
 
                 <motion.div
-                    className="glass-card p-12 text-center flex-1 flex flex-col items-center justify-center"
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    className="card p-12 text-center flex-1 flex flex-col items-center justify-center"
+                    initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                 >
-                    <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-6">
-                        <User className="w-10 h-10 text-purple-400" />
+                    <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6 text-white/40">
+                        <User className="w-8 h-8" />
                     </div>
                     <h3 className="heading text-xl text-white mb-2">Welcome to Tickto</h3>
-                    <p className="text-white/50 text-sm mb-8">
+                    <p className="text-white/40 text-sm mb-8">
                         Connect your wallet or sign in with email to get started.
                     </p>
                     <button
                         onClick={login}
-                        className="px-8 py-4 rounded-full bg-purple-500 hover:bg-purple-600 transition-colors text-white font-medium"
+                        className="btn-primary"
                     >
                         Sign In
                     </button>
@@ -181,23 +181,23 @@ export default function ProfilePage() {
             {/* Header */}
             <motion.header
                 className="mb-8"
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
                 <h1 className="heading text-3xl text-white mb-1">Profile</h1>
-                <p className="text-white/50">Manage your account</p>
+                <p className="text-white/40">Manage your account</p>
             </motion.header>
 
             {/* Profile Card */}
             <motion.div
-                className="glass-card p-6 mb-8"
-                initial={{ opacity: 0, scale: 0.95 }}
+                className="card p-6 mb-8"
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
             >
                 {/* Avatar & Name */}
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white text-2xl font-bold">
                         {displayName.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -218,17 +218,17 @@ export default function ProfilePage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-white/5 text-center">
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
                         {loadingTickets ? (
-                            <Loader2 className="w-6 h-6 text-purple-400 mx-auto animate-spin" />
+                            <Loader2 className="w-6 h-6 text-white mx-auto animate-spin" />
                         ) : (
-                            <p className="mono text-2xl text-purple-400 font-bold">{ticketCount}</p>
+                            <p className="mono text-2xl text-white font-bold">{ticketCount}</p>
                         )}
-                        <p className="text-xs text-white/50">Tickets Owned</p>
+                        <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">Tickets Owned</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 text-center">
-                        <p className="mono text-2xl text-emerald-400 font-bold">0</p>
-                        <p className="text-xs text-white/50">Events Attended</p>
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
+                        <p className="mono text-2xl text-white font-bold">0</p>
+                        <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">Events Attended</p>
                     </div>
                 </div>
             </motion.div>

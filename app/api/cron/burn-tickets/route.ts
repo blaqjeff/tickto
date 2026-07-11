@@ -4,7 +4,7 @@ import { Connection, Keypair, PublicKey, VersionedTransaction, TransactionMessag
 import { TicktoClient } from '@/lib/tickto-program';
 import bs58 from 'bs58';
 
-export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 // 1. Initialize Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';

@@ -298,7 +298,7 @@ export default function CreateEventPage() {
                             key={i}
                             className="absolute w-2 h-2 rounded-full"
                             style={{
-                                background: ['#a855f7', '#6366f1', '#ec4899', '#f59e0b', '#10b981'][i % 5],
+                                background: ['#D4AF37', '#F3E5AB', '#EFEEED', '#BEA98E', '#10B981'][i % 5],
                                 left: `${10 + Math.random() * 80}%`,
                                 top: `${10 + Math.random() * 40}%`,
                             }}
@@ -320,7 +320,7 @@ export default function CreateEventPage() {
 
                 {/* Success Icon */}
                 <motion.div
-                    className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center mb-8 shadow-lg shadow-emerald-500/30"
+                    className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-8"
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
@@ -330,43 +330,43 @@ export default function CreateEventPage() {
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.5, type: 'spring', stiffness: 300 }}
                     >
-                        <Check className="w-12 h-12 text-white" strokeWidth={3} />
+                        <Check className="w-8 h-8 text-emerald-400" strokeWidth={3} />
                     </motion.div>
                 </motion.div>
 
                 {/* Congrats Text */}
                 <motion.div
                     className="text-center mb-8"
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                 >
                     <div className="flex items-center justify-center gap-2 mb-3">
-                        <PartyPopper className="w-6 h-6 text-yellow-400" />
+                        <PartyPopper className="w-5 h-5 text-yellow-450" />
                         <h1 className="heading text-3xl text-white">Congratulations!</h1>
-                        <PartyPopper className="w-6 h-6 text-yellow-400" style={{ transform: 'scaleX(-1)' }} />
+                        <PartyPopper className="w-5 h-5 text-yellow-450" style={{ transform: 'scaleX(-1)' }} />
                     </div>
-                    <p className="text-white/60 text-lg leading-relaxed">
-                        <span className="text-white font-semibold">{createdEvent.title}</span> is now live on Tickto!
+                    <p className="text-white/50 text-base leading-relaxed">
+                        <span className="text-white font-medium">{createdEvent.title}</span> is now live on Tickto!
                         Share it with the world!
                     </p>
                 </motion.div>
 
                 {/* Share Link Card */}
                 <motion.div
-                    className="w-full glass-card p-5 mb-6"
-                    initial={{ opacity: 0, y: 20 }}
+                    className="w-full card p-5 mb-6"
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
                 >
-                    <p className="text-white/40 text-xs uppercase tracking-wider mb-3 font-medium">Event Link</p>
+                    <p className="text-white/30 text-xs uppercase tracking-wider mb-3 font-medium">Event Link</p>
                     <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 overflow-hidden">
+                        <div className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 overflow-hidden">
                             <p className="text-white/80 text-sm mono truncate">{eventUrl}</p>
                         </div>
                         <button
                             onClick={copyLink}
-                            className="p-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 transition-colors text-purple-400"
+                            className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-white"
                             title="Copy link"
                         >
                             {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
@@ -389,7 +389,7 @@ export default function CreateEventPage() {
                         href={`https://explorer.solana.com/tx/${createdEvent.txSignature}?cluster=devnet`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-white/30 text-xs flex items-center gap-1 hover:text-white/50 transition-colors mb-6"
+                        className="text-white/35 text-xs flex items-center gap-1 hover:text-white/60 transition-colors mb-6"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.8 }}
@@ -402,13 +402,13 @@ export default function CreateEventPage() {
                 {/* Action Buttons */}
                 <motion.div
                     className="w-full space-y-3"
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 }}
                 >
                     <button
                         onClick={shareEvent}
-                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25 active:scale-[0.98]"
+                        className="w-full btn-primary py-3.5 flex items-center justify-center gap-2"
                     >
                         <Share2 className="w-5 h-5" />
                         Share Your Event
@@ -416,7 +416,7 @@ export default function CreateEventPage() {
 
                     <button
                         onClick={() => router.push(`/event/${createdEvent.id}`)}
-                        className="w-full py-4 rounded-2xl bg-white/10 hover:bg-white/15 transition-colors text-white font-medium flex items-center justify-center gap-2 active:scale-[0.98]"
+                        className="w-full btn-secondary py-3.5 flex items-center justify-center gap-2"
                     >
                         <Ticket className="w-5 h-5" />
                         View Event Page
@@ -443,11 +443,11 @@ export default function CreateEventPage() {
         <div className="px-4 py-8 max-w-2xl mx-auto min-h-screen safe-bottom">
             <motion.header
                 className="mb-8 text-center"
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
                 <h1 className="heading text-3xl text-white mb-2">Create New Event</h1>
-                <p className="text-white/50">Details, tickets, and artwork.</p>
+                <p className="text-white/40">Details, tickets, and artwork.</p>
             </motion.header>
 
             <motion.form
@@ -459,7 +459,7 @@ export default function CreateEventPage() {
             >
                 {/* Image Upload */}
                 <div className="relative group">
-                    <label className="block w-full aspect-video rounded-3xl border-2 border-dashed border-white/20 hover:border-purple-500/50 transition-colors cursor-pointer overflow-hidden bg-white/5">
+                    <label className="block w-full aspect-video rounded-xl border border-dashed border-white/20 hover:border-white/45 transition-colors cursor-pointer overflow-hidden bg-white/5">
                         <input
                             type="file"
                             accept="image/*"
@@ -470,8 +470,8 @@ export default function CreateEventPage() {
                         {imagePreview ? (
                             <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-white/40 group-hover:text-purple-400 transition-colors">
-                                <Upload className="w-10 h-10 mb-2" />
+                            <div className="flex flex-col items-center justify-center h-full text-white/30 group-hover:text-white/60 transition-colors">
+                                <Upload className="w-8 h-8 mb-2" />
                                 <span className="text-sm font-medium">Upload Poster</span>
                             </div>
                         )}
@@ -484,27 +484,27 @@ export default function CreateEventPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Title */}
                     <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm text-white/70 font-medium ml-1">Event Title</label>
+                        <label className="text-sm text-white/50 font-medium ml-1">Event Title</label>
                         <input
                             type="text"
                             value={formData.title}
                             onChange={e => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors"
-                            placeholder="e.g. Neon Nights 2024"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors"
+                            placeholder="e.g. Neon Nights 2026"
                             required
                         />
                     </div>
 
                     {/* Date */}
                     <div className="space-y-2">
-                        <label className="text-sm text-white/70 font-medium ml-1">Date & Time</label>
+                        <label className="text-sm text-white/50 font-medium ml-1">Date & Time</label>
                         <div className="relative">
                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                             <input
                                 type="datetime-local"
                                 value={formData.date}
                                 onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors"
                                 required
                             />
                         </div>
@@ -512,14 +512,14 @@ export default function CreateEventPage() {
 
                     {/* Location */}
                     <div className="space-y-2">
-                        <label className="text-sm text-white/70 font-medium ml-1">Location</label>
+                        <label className="text-sm text-white/50 font-medium ml-1">Location</label>
                         <div className="relative">
                             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                             <input
                                 type="text"
                                 value={formData.location}
                                 onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors"
                                 placeholder="Start typing..."
                                 required
                             />
@@ -527,16 +527,16 @@ export default function CreateEventPage() {
                     </div>
 
                     {/* Ticket Tiers Section */}
-                    <div className="space-y-4 md:col-span-2 pt-4 border-t border-white/10">
+                    <div className="space-y-4 md:col-span-2 pt-4 border-t border-white/5">
                         <div className="flex items-center justify-between">
-                            <label className="text-sm text-white/70 font-medium ml-1 flex items-center gap-2">
-                                <Ticket className="w-4 h-4 text-purple-400" />
+                            <label className="text-sm text-white/50 font-medium ml-1 flex items-center gap-2">
+                                <Ticket className="w-4 h-4 text-white/40" />
                                 Ticket Tiers
                             </label>
                             <button
                                 type="button"
                                 onClick={addTier}
-                                className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300 font-medium"
+                                className="text-xs flex items-center gap-1 text-white/50 hover:text-white hover:underline font-medium"
                             >
                                 <Plus className="w-3 h-3" />
                                 Add Tier
@@ -551,7 +551,7 @@ export default function CreateEventPage() {
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        className="relative grid grid-cols-12 gap-3 bg-white/5 p-3 rounded-xl border border-white/5 group"
+                                        className="relative grid grid-cols-12 gap-3 bg-white/3 p-3 rounded-xl border border-white/5 group"
                                     >
                                         <div className="col-span-12 md:col-span-5">
                                             <input
@@ -559,7 +559,7 @@ export default function CreateEventPage() {
                                                 placeholder="Tier Name (e.g. VIP)"
                                                 value={tier.name}
                                                 onChange={e => updateTier(index, 'name', e.target.value)}
-                                                className="w-full bg-transparent border-b border-white/10 focus:border-purple-500 pb-1 text-sm text-white focus:outline-none"
+                                                className="w-full bg-transparent border-b border-white/10 focus:border-white/30 pb-1 text-sm text-white focus:outline-none"
                                                 required
                                             />
                                         </div>
@@ -573,7 +573,7 @@ export default function CreateEventPage() {
                                                     min="0"
                                                     value={tier.price}
                                                     onChange={e => updateTier(index, 'price', e.target.value)}
-                                                    className="w-full bg-transparent border-b border-white/10 focus:border-purple-500 pb-1 pl-8 text-sm text-white focus:outline-none text-right"
+                                                    className="w-full bg-transparent border-b border-white/10 focus:border-white/30 pb-1 pl-8 text-sm text-white focus:outline-none text-right"
                                                     required
                                                 />
                                             </div>
@@ -585,7 +585,7 @@ export default function CreateEventPage() {
                                                 min="1"
                                                 value={tier.quantity}
                                                 onChange={e => updateTier(index, 'quantity', e.target.value)}
-                                                className="w-full bg-transparent border-b border-white/10 focus:border-purple-500 pb-1 text-sm text-white focus:outline-none text-right"
+                                                className="w-full bg-transparent border-b border-white/10 focus:border-white/30 pb-1 text-sm text-white focus:outline-none text-right"
                                                 required
                                             />
                                         </div>
@@ -607,11 +607,11 @@ export default function CreateEventPage() {
 
                     {/* Description */}
                     <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm text-white/70 font-medium ml-1">Description</label>
+                        <label className="text-sm text-white/50 font-medium ml-1">Description</label>
                         <textarea
                             value={formData.description}
                             onChange={e => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors bg-transparent"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                             rows={4}
                             placeholder="Tell people what makes this event special..."
                             required
@@ -623,7 +623,7 @@ export default function CreateEventPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-lg shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full btn-primary py-4 font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isLoading ? (
                             <>

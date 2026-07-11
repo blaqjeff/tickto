@@ -19,11 +19,11 @@ const categoryFilters: { label: string; value: EventCategory | 'all' }[] = [
 ];
 
 const categoryColors: Record<EventCategory, string> = {
-    music: 'bg-purple-500/20 text-purple-400',
-    sports: 'bg-emerald-500/20 text-emerald-400',
-    arts: 'bg-pink-500/20 text-pink-400',
-    conference: 'bg-blue-500/20 text-blue-400',
-    nightlife: 'bg-orange-500/20 text-orange-400',
+    music: 'bg-white/5 text-white/80 border border-white/10',
+    sports: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    arts: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+    conference: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+    nightlife: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
 };
 
 function EventResultCard({ event }: { event: Event }) {
@@ -45,12 +45,13 @@ function EventResultCard({ event }: { event: Event }) {
     return (
         <Link href={`/event/${event.id}`}>
             <motion.div
-                className="glass-card glass-card-hover overflow-hidden group h-full flex flex-col"
-                initial={{ opacity: 0, y: 10 }}
+                className="card card-hover overflow-hidden group h-full flex flex-col cursor-pointer"
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                whileHover={{ scale: 1.02, y: -4 }}
+                exit={{ opacity: 0, y: -15 }}
+                whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
                 {/* Cover Image */}
                 <div className="relative h-44 overflow-hidden">
@@ -58,14 +59,14 @@ function EventResultCard({ event }: { event: Event }) {
                         src={imageSrc}
                         alt={event.title}
                         fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="object-cover transition-transform duration-500 group-hover:scale-102"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
 
                     {/* Category Badge */}
                     <span
-                        className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md ${categoryColors[event.category] || 'bg-white/20 text-white'
+                        className={`absolute top-3 left-3 px-2.5 py-0.5 rounded text-[11px] font-medium backdrop-blur-md ${categoryColors[event.category] || 'bg-white/10 text-white'
                             }`}
                     >
                         {event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'}
@@ -77,7 +78,7 @@ function EventResultCard({ event }: { event: Event }) {
                     <h3 className="heading text-white text-lg mb-2 line-clamp-1">
                         {event.title}
                     </h3>
-                    <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
+                    <div className="flex items-center gap-2 text-sm text-white/50 mb-1">
                         <Calendar className="w-4 h-4 shrink-0" />
                         <span className="line-clamp-1">{formatDate(event.date)} · {formatTime(event.date || event.time)}</span>
                     </div>
@@ -85,9 +86,9 @@ function EventResultCard({ event }: { event: Event }) {
                         <MapPin className="w-4 h-4 shrink-0" />
                         <span className="line-clamp-1">{event.location || event.venue || 'Location TBA'}</span>
                     </div>
-                    <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
-                        <span className="text-xs text-white/40">Price</span>
-                        <span className="mono text-purple-400 text-sm font-semibold">
+                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-xs text-white/30">Price</span>
+                        <span className="mono text-white text-sm font-medium">
                             {priceLabel}
                         </span>
                     </div>
@@ -135,7 +136,7 @@ export default function SearchPage() {
             {/* Search Header */}
             <motion.div
                 className="mb-8"
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
                 <h1 className="heading text-3xl md:text-4xl text-white mb-4">Search</h1>
@@ -150,15 +151,15 @@ export default function SearchPage() {
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search events, venues, locations..."
-                        className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all"
+                        className="w-full h-12 pl-12 pr-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-all"
                         autoFocus
                     />
                     {query && (
                         <button
                             onClick={() => setQuery('')}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                         >
-                            <X className="w-4 h-4 text-white/60" />
+                             <X className="w-3.5 h-3.5 text-white/60" />
                         </button>
                     )}
                 </div>
@@ -175,9 +176,9 @@ export default function SearchPage() {
                     <button
                         key={filter.value}
                         onClick={() => setSelectedCategory(filter.value)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === filter.value
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-white/5 text-white/60 hover:bg-white/10'
+                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === filter.value
+                            ? 'bg-white text-black shadow-sm'
+                            : 'bg-white/5 text-white/50 hover:bg-white/10'
                             }`}
                     >
                         {filter.label}
@@ -189,8 +190,8 @@ export default function SearchPage() {
             <div>
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                        <p className="text-white/50 mt-4 text-sm">Loading events...</p>
+                        <Loader2 className="w-8 h-8 text-white animate-spin" />
+                        <p className="text-white/40 mt-4 text-sm">Loading events...</p>
                     </div>
                 ) : (
                     <AnimatePresence mode="popLayout">
@@ -202,13 +203,13 @@ export default function SearchPage() {
                             </div>
                         ) : (
                             <motion.div
-                                className="glass-card p-12 text-center max-w-md mx-auto"
-                                initial={{ opacity: 0, scale: 0.9 }}
+                                className="card p-12 text-center max-w-md mx-auto"
+                                initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                             >
                                 <Search className="w-12 h-12 text-white/20 mx-auto mb-4" />
                                 <h3 className="heading text-lg text-white mb-2">No Results Found</h3>
-                                <p className="text-white/50 text-sm">
+                                <p className="text-white/40 text-sm">
                                     Try adjusting your search or filters
                                 </p>
                             </motion.div>

@@ -34,7 +34,7 @@ export function SwipeButton({
     const backgroundColor = useTransform(
         progress,
         [0, 1],
-        ['rgba(168, 85, 247, 0.2)', 'rgba(168, 85, 247, 0.5)']
+        ['rgba(255, 255, 255, 0.03)', 'rgba(255, 255, 255, 0.08)']
     );
 
     const handleDragEnd = async (_: unknown, info: PanInfo) => {
@@ -61,14 +61,14 @@ export function SwipeButton({
         switch (state) {
             case 'processing':
                 return (
-                    <div className="flex items-center gap-3 text-purple-400">
+                    <div className="flex items-center gap-3 text-white">
                         <Loader2 className="w-5 h-5 animate-spin" />
                         <span className="font-medium">Processing...</span>
                     </div>
                 );
             case 'minting':
                 return (
-                    <div className="flex items-center gap-3 text-purple-400">
+                    <div className="flex items-center gap-3 text-white">
                         <Sparkles className="w-5 h-5 animate-pulse" />
                         <span className="font-medium">Minting Ticket...</span>
                     </div>
@@ -82,7 +82,7 @@ export function SwipeButton({
                 );
             default:
                 return (
-                    <span className="text-white/50 font-medium">{label}</span>
+                    <span className="text-white/40 font-medium">{label}</span>
                 );
         }
     };
@@ -111,13 +111,8 @@ export function SwipeButton({
                     dragElastic={0}
                     style={{ x }}
                     onDragEnd={handleDragEnd}
-                    whileDrag={{ scale: 1.05 }}
                 >
-                    <motion.div
-                        className="w-6 h-6 text-white"
-                        animate={{ x: [0, 4, 0] }}
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                    >
+                    <div className="w-6 h-6 text-black flex items-center justify-center">
                         <svg
                             viewBox="0 0 24 24"
                             fill="none"
@@ -128,11 +123,11 @@ export function SwipeButton({
                         >
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
-                    </motion.div>
+                    </div>
                 </motion.div>
             )}
 
-            {/* Success State - Confetti would be triggered externally */}
+            {/* Success State */}
             {state === 'success' && (
                 <motion.div
                     className="absolute inset-0 flex items-center justify-center"
@@ -140,7 +135,7 @@ export function SwipeButton({
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', damping: 15 }}
                 >
-                    <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-xl bg-emerald-500 flex items-center justify-center">
                         <Check className="w-8 h-8 text-white" />
                     </div>
                 </motion.div>

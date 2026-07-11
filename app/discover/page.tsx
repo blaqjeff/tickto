@@ -16,11 +16,11 @@ import { Connection, VersionedTransaction } from '@solana/web3.js';
 import { ConfettiEffect } from '@/components/ui/ConfettiEffect';
 
 const categoryColors: Record<EventCategory, string> = {
-  music: 'bg-purple-500/20 text-purple-400',
-  sports: 'bg-emerald-500/20 text-emerald-400',
-  arts: 'bg-pink-500/20 text-pink-400',
-  conference: 'bg-blue-500/20 text-blue-400',
-  nightlife: 'bg-orange-500/20 text-orange-400',
+  music: 'bg-white/5 text-white/80 border border-white/10',
+  sports: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  arts: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  conference: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  nightlife: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
 };
 
 const container = {
@@ -32,7 +32,7 @@ const container = {
 };
 
 const item = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 15 },
   show: { opacity: 1, y: 0 },
 };
 
@@ -54,26 +54,25 @@ function EventCard({ event }: { event: Event }) {
 
   return (
     <Link href={`/event/${event.id}`}>
-      <GlassCardSimple className="overflow-hidden group h-full flex flex-col glass-card-hover">
+      <GlassCardSimple className="overflow-hidden group h-full flex flex-col card-hover">
         <div className="relative h-44 -mx-6 -mt-6 mb-4 overflow-hidden">
           <Image
             src={imageSrc}
             alt={event.title}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
 
           <span
-            className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md ${categoryColors[event.category] || 'bg-white/20 text-white'}`}
+            className={`absolute top-3 left-3 px-2.5 py-0.5 rounded text-[11px] font-medium backdrop-blur-md ${categoryColors[event.category] || 'bg-white/10 text-white'}`}
           >
             {event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'}
           </span>
 
           {event.featured && (
-            <span className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/30 text-purple-300 backdrop-blur-md flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
+            <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded text-[11px] font-medium bg-white text-black backdrop-blur-md flex items-center gap-1">
               Featured
             </span>
           )}
@@ -84,22 +83,22 @@ function EventCard({ event }: { event: Event }) {
             {event.title}
           </h3>
 
-          <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
+          <div className="flex items-center gap-2 text-sm text-white/50 mb-1">
             <Calendar className="w-4 h-4 shrink-0" />
             <span className="line-clamp-1">
               {formatDate(event.date)} · {formatTime(event.date || event.time)}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-white/60">
+          <div className="flex items-center gap-2 text-sm text-white/50">
             <MapPin className="w-4 h-4 shrink-0" />
             <span className="line-clamp-1">{event.location || event.venue || 'Location TBA'}</span>
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-          <span className="text-xs text-white/40">Price</span>
-          <span className="mono text-purple-400 font-semibold">
+        <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+          <span className="text-xs text-white/30">Price</span>
+          <span className="mono text-white font-medium">
             {priceLabel}
           </span>
         </div>
@@ -132,7 +131,7 @@ function ResaleCard({
     || 'https://images.unsplash.com/photo-1545167622-3a6ac156f422?q=80&w=1000&auto=format&fit=crop';
 
   return (
-    <GlassCardSimple className="overflow-hidden group h-full flex flex-col glass-card-hover">
+    <GlassCardSimple className="overflow-hidden group h-full flex flex-col card-hover">
       <div className="relative h-44 -mx-6 -mt-6 mb-4 overflow-hidden">
         <Image
           src={imageSrc}
@@ -141,9 +140,9 @@ function ResaleCard({
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
         
-        <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-md">
+        <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-white/10 text-white border border-white/10 backdrop-blur-md">
           RESALE LISTING
         </span>
       </div>
@@ -152,29 +151,29 @@ function ResaleCard({
         <h3 className="heading text-lg text-white mb-2 line-clamp-1">
           {event.title}
         </h3>
-        <p className="text-xs text-white/50 mb-3 font-medium">Tier: {listing.tier_name}</p>
+        <p className="text-xs text-white/40 mb-3 font-medium">Tier: {listing.tier_name}</p>
 
-        <div className="flex items-center gap-2 text-sm text-white/60 mb-1">
+        <div className="flex items-center gap-2 text-sm text-white/50 mb-1">
           <Calendar className="w-4 h-4 shrink-0" />
           <span className="line-clamp-1">
             {formatDate(event.date)} · {formatTime(event.date || event.time)}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-white/60">
+        <div className="flex items-center gap-2 text-sm text-white/50">
           <MapPin className="w-4 h-4 shrink-0" />
           <span className="line-clamp-1">{event.location || event.venue || 'Location TBA'}</span>
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-4">
+      <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between gap-4">
         <div className="flex flex-col">
-          <span className="text-[10px] text-white/40 uppercase">Original Price</span>
-          <span className="text-xs text-white/60 line-through">${(event.price_usd || 0).toFixed(2)}</span>
+          <span className="text-[10px] text-white/30 uppercase tracking-wider">Original Price</span>
+          <span className="text-xs text-white/50 line-through">${(event.price_usd || 0).toFixed(2)}</span>
         </div>
         <div className="flex flex-col text-right">
-          <span className="text-[10px] text-white/40 uppercase">Resale Price</span>
-          <span className="mono text-purple-400 font-semibold text-lg">
+          <span className="text-[10px] text-white/30 uppercase tracking-wider">Resale Price</span>
+          <span className="mono text-white font-medium text-lg">
             ${Number(listing.listing_price_usd).toFixed(2)} USDC
           </span>
         </div>
@@ -185,7 +184,7 @@ function ResaleCard({
           e.preventDefault();
           onBuy(listing);
         }}
-        className="w-full mt-4 py-3.5 rounded-2xl bg-purple-500 hover:bg-purple-600 transition-colors text-white text-sm font-semibold flex items-center justify-center gap-2"
+        className="w-full mt-4 btn-primary py-2.5 text-sm font-semibold flex items-center justify-center gap-2"
       >
         <Banknote className="w-4 h-4" />
         Buy Resale Ticket
@@ -201,9 +200,9 @@ function LoadingState() {
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
       >
-        <Loader2 className="w-8 h-8 text-purple-400" />
+        <Loader2 className="w-8 h-8 text-white" />
       </motion.div>
-      <p className="text-white/50 mt-4">Loading listings...</p>
+      <p className="text-white/40 mt-4">Loading listings...</p>
     </div>
   );
 }
@@ -211,13 +210,13 @@ function LoadingState() {
 function EmptyState({ message = 'No events found.' }: { message?: string }) {
   return (
     <motion.div
-      className="glass-card p-12 text-center max-w-md mx-auto"
-      initial={{ opacity: 0, scale: 0.9 }}
+      className="card p-12 text-center max-w-md mx-auto"
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
     >
-      <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+      <Sparkles className="w-12 h-12 text-white/20 mx-auto mb-4" />
       <h3 className="heading text-xl text-white mb-2">{message}</h3>
-      <p className="text-white/50 text-sm">
+      <p className="text-white/40 text-sm">
         Try checking back later or adjusting your filter.
       </p>
     </motion.div>
@@ -406,30 +405,30 @@ export default function HomePage() {
       {/* Header & Search */}
       <motion.header
         className="mb-8 space-y-6"
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.4 }}
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="heading text-3xl md:text-4xl text-white mb-1">Discover Tickets</h1>
-            <p className="text-white/50">Explore events and secondary resale listings</p>
+            <p className="text-white/40">Explore events and secondary resale listings</p>
           </div>
 
           {/* Feed Tab Toggles */}
-          <div className="flex p-1 bg-white/5 border border-white/10 rounded-2xl max-w-xs md:max-w-md w-full">
+          <div className="flex p-1 bg-white/5 border border-white/5 rounded-xl max-w-xs md:max-w-md w-full">
             <button
               onClick={() => setTab('primary')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                tab === 'primary' ? 'bg-purple-500 text-white shadow-lg' : 'text-neutral-400 hover:text-white'
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                tab === 'primary' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white'
               }`}
             >
               Box Office
             </button>
             <button
               onClick={() => setTab('resale')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                tab === 'resale' ? 'bg-purple-500 text-white shadow-lg' : 'text-neutral-400 hover:text-white'
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                tab === 'resale' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white'
               }`}
             >
               Resale Market
@@ -445,7 +444,7 @@ export default function HomePage() {
             placeholder={tab === 'primary' ? "Search events or venues..." : "Search secondary ticket listings..."}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all shadow-xl"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
           />
         </div>
       </motion.header>
@@ -461,32 +460,31 @@ export default function HomePage() {
             {featuredEvent && !isSearching && (
               <motion.section
                 className="mb-10"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                transition={{ duration: 0.4, delay: 0.05 }}
               >
                 <Link href={`/event/${featuredEvent.id}`}>
-                  <div className="glass-card glass-card-hover overflow-hidden relative group">
+                  <div className="card card-hover overflow-hidden relative group">
                     <div className="relative h-64 md:h-80 lg:h-96">
                       <Image
                         src={featuredEvent.coverImage || '/placeholder-event.jpg'}
                         alt={featuredEvent.title}
                         fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 group-hover:scale-102"
                         sizes="100vw"
                         priority
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
 
                       <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/30 text-purple-300 backdrop-blur-md mb-3">
-                          <Sparkles className="w-3 h-3" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-medium bg-white text-black backdrop-blur-md mb-3">
                           Featured Event
                         </span>
                         <h2 className="heading text-2xl md:text-3xl lg:text-4xl text-white mb-2">
                           {featuredEvent.title}
                         </h2>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
                             {formatDate(featuredEvent.date)} · {formatTime(featuredEvent.date || featuredEvent.time)}
@@ -550,18 +548,18 @@ export default function HomePage() {
       {/* Transaction Checkout Status Modal */}
       <AnimatePresence>
         {purchasingListing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-zinc-900 border border-white/10 rounded-3xl p-6 text-center relative overflow-hidden"
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="w-full max-w-sm bg-[#121212] border border-white/10 rounded-2xl p-6 text-center relative overflow-hidden"
             >
               {/* Header */}
               {purchaseState !== 'processing' && purchaseState !== 'signing' && purchaseState !== 'confirming' && (
                 <button
                   onClick={() => setPurchasingListing(null)}
-                  className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -573,18 +571,18 @@ export default function HomePage() {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-12 h-12 rounded-full border-2 border-purple-500 border-t-transparent flex items-center justify-center mb-4"
+                    className="w-12 h-12 rounded-full border-2 border-white border-t-transparent flex items-center justify-center mb-4"
                   />
                 )}
 
                 {purchaseState === 'success' && (
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mb-4 text-xl">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-4 text-xl">
                     ✓
                   </div>
                 )}
 
                 {purchaseState === 'error' && (
-                  <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center mb-4">
                     <ShieldAlert className="w-6 h-6" />
                   </div>
                 )}
@@ -609,7 +607,7 @@ export default function HomePage() {
               {purchaseState === 'success' && (
                 <button
                   onClick={() => setPurchasingListing(null)}
-                  className="w-full py-3.5 rounded-2xl bg-purple-500 hover:bg-purple-600 text-white font-semibold transition-colors mt-4"
+                  className="w-full btn-primary py-3.5 font-semibold mt-4"
                 >
                   Done
                 </button>

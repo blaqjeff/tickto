@@ -22,14 +22,14 @@ const SOL_PRICE_USD = 145; // Mock price for devnet
 function TransactionItem({ transaction }: { transaction: Transaction }) {
     return (
         <motion.div
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors"
+            className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            whileHover={{ x: 4 }}
+            whileHover={{ x: 2 }}
         >
             {/* Icon */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500/20">
-                <ArrowDownLeft className="w-5 h-5 text-purple-400" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/5 border border-white/10">
+                <ArrowDownLeft className="w-5 h-5 text-white/60" />
             </div>
 
             {/* Info */}
@@ -166,8 +166,8 @@ export default function WalletPage() {
     if (!ready || loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                <p className="text-white/50 mt-4 text-sm">Loading wallet data...</p>
+                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                <p className="text-white/40 mt-4 text-sm">Loading wallet data...</p>
             </div>
         );
     }
@@ -175,21 +175,11 @@ export default function WalletPage() {
     if (!authenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
-                <Wallet className="w-12 h-12 text-purple-400 mb-4" />
-                <h2 className="text-xl text-white font-bold mb-2">Wallet Locked</h2>
-                <p className="text-white/50 mb-6">Please sign in to view your wallet.</p>
-            </div>
-        );
-    }
-
-    if (!authenticated) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
-                <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-6">
-                    <Wallet className="w-8 h-8 text-purple-400" />
+                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-white/40">
+                    <Wallet className="w-8 h-8" />
                 </div>
                 <h2 className="text-xl text-white font-bold mb-2">Wallet Locked</h2>
-                <p className="text-white/50 mb-6">Please sign in to view your wallet.</p>
+                <p className="text-white/40 mb-6">Please sign in to view your wallet.</p>
             </div>
         );
     }
@@ -198,8 +188,8 @@ export default function WalletPage() {
     if (!address) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center max-w-sm mx-auto">
-                <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-6">
-                    <Wallet className="w-8 h-8 text-purple-400" />
+                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-white/40">
+                    <Wallet className="w-8 h-8" />
                 </div>
                 <h2 className="text-2xl text-white font-bold mb-3">Setup Your Wallet</h2>
                 <p className="text-white/60 mb-8 leading-relaxed">
@@ -207,7 +197,7 @@ export default function WalletPage() {
                 </p>
                 <button
                     onClick={createWallet}
-                    className="w-full py-4 rounded-xl bg-purple-500 hover:bg-purple-600 transition-all font-semibold text-white shadow-lg shadow-purple-500/25 active:scale-95"
+                    className="w-full btn-primary py-4 font-semibold"
                 >
                     Create Secure Wallet
                 </button>
@@ -223,30 +213,30 @@ export default function WalletPage() {
             {/* Header */}
             <motion.header
                 className="mb-8"
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
                 <h1 className="heading text-3xl text-white mb-1">Wallet</h1>
-                <p className="text-white/50">Your crypto balance & history</p>
+                <p className="text-white/40">Your crypto balance & history</p>
             </motion.header>
 
             {/* Balance Card */}
             <motion.div
-                className="glass-card p-6 mb-8"
-                initial={{ opacity: 0, scale: 0.95 }}
+                className="card p-6 mb-8"
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
             >
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                            <Wallet className="w-6 h-6 text-purple-400" />
+                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                            <Wallet className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             {/* Updated Label */}
-                            <p className="text-white/50 text-sm">Total Balance (USD)</p>
+                            <p className="text-white/40 text-xs uppercase tracking-wider">Total Balance (USD)</p>
                             {/* Display Balance in USD */}
-                            <h2 className="mono text-3xl text-white font-bold">
+                            <h2 className="mono text-3xl text-white font-bold mt-1">
                                 ${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </h2>
                             <p className="text-white/30 text-xs mt-1">
@@ -257,11 +247,11 @@ export default function WalletPage() {
                 </div>
 
                 {/* Address Card */}
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500" />
+                        <div className="w-8 h-8 rounded-full bg-white/10" />
                         <div>
-                            <p className="text-xs text-white/50">Your Address</p>
+                            <p className="text-xs text-white/40">Your Address</p>
                             <p className="mono text-sm text-white font-medium">
                                 {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}
                             </p>
@@ -279,7 +269,7 @@ export default function WalletPage() {
                 {/* Add Funds Button */}
                 <button
                     onClick={handleAddFunds}
-                    className="w-full mt-4 py-4 rounded-2xl bg-purple-500 hover:bg-purple-600 transition-colors flex items-center justify-center gap-2 text-white font-medium"
+                    className="w-full mt-4 btn-primary py-4 font-medium flex items-center justify-center gap-2"
                 >
                     <Plus className="w-5 h-5" />
                     Add Funds
@@ -290,7 +280,7 @@ export default function WalletPage() {
                         href={`https://explorer.solana.com/address/${address}?cluster=devnet`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-white/80 text-sm font-medium"
+                        className="flex-1 btn-secondary py-3 text-sm font-medium flex items-center justify-center gap-2"
                     >
                         <ExternalLink className="w-4 h-4" />
                         Explorer
@@ -312,7 +302,7 @@ export default function WalletPage() {
                                 key={tx.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 * index }}
+                                transition={{ delay: 0.05 * index }}
                             >
                                 <TransactionItem transaction={tx} />
                             </motion.div>

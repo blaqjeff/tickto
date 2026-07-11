@@ -17,7 +17,7 @@ interface ConfettiEffectProps {
     onComplete?: () => void;
 }
 
-const COLORS = ['#c084fc', '#a855f7', '#34d399', '#fbbf24', '#f472b6', '#60a5fa'];
+const COLORS = ['#D4AF37', '#F3E5AB', '#EFEEED', '#BEA98E', '#10B981', '#A7F3D0'];
 
 /**
  * ConfettiEffect - Celebration animation for successful transactions

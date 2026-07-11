@@ -93,7 +93,7 @@ function TicketCard({
             frontContent={
                 <div className="flex flex-col h-full">
                     {/* Cover Image */}
-                    <div className="relative h-28 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-[28px]">
+                    <div className="relative h-28 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-xl">
                         <Image
                             src={coverImage}
                             alt={eventTitle}
@@ -101,15 +101,15 @@ function TicketCard({
                             className="object-cover"
                             sizes="100vw"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
 
                         {/* Status Badge */}
                         {ticket.listing_status === 'active' ? (
-                            <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-md">
+                            <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-white/15 text-white border border-white/20 backdrop-blur-md">
                                 LISTED · ${ticket.listing_price_usd} USDC
                             </div>
                         ) : (
-                            <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 backdrop-blur-md">
+                            <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 backdrop-blur-md">
                                 {status.toUpperCase()}
                             </div>
                         )}
@@ -122,44 +122,40 @@ function TicketCard({
                         </h3>
 
                         <div className="space-y-2 mb-4">
-                            <div className="flex items-center gap-2 text-sm text-white/60">
-                                <Calendar className="w-4 h-4 text-purple-400" />
+                            <div className="flex items-center gap-2 text-sm text-white/50">
+                                <Calendar className="w-4 h-4 text-white/40" />
                                 <span>
                                     {formatDate(eventDate)} · {formatTime(eventTime)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-white/60">
-                                <MapPin className="w-4 h-4 text-purple-400" />
+                            <div className="flex items-center gap-2 text-sm text-white/50">
+                                <MapPin className="w-4 h-4 text-white/40" />
                                 <span>{eventVenue}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Tier Badge */}
-                    <div className="pt-4 border-t border-white/10">
+                    <div className="pt-4 border-t border-white/5">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-white/50">Tier</span>
-                            <span className="text-sm font-medium text-purple-400">{tierName}</span>
+                            <span className="text-xs text-white/40">Tier</span>
+                            <span className="text-sm font-medium text-white">{tierName}</span>
                         </div>
                     </div>
 
                     {/* Tap Hint */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                        <motion.div
-                            className="flex items-center gap-2 text-xs text-white/40"
-                            animate={{ opacity: [0.4, 0.8, 0.4] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                        >
+                        <div className="flex items-center gap-2 text-xs text-white/30">
                             <QrCode className="w-3 h-3" />
                             <span>Tap to reveal QR</span>
-                        </motion.div>
+                        </div>
                     </div>
                 </div>
             }
             backContent={
                 <div className="flex flex-col items-center justify-center h-full">
                     {/* Rendered QR Code */}
-                    <div className="w-36 h-36 bg-white rounded-xl p-2 mb-3 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.15)] ring-1 ring-white/10 overflow-hidden">
+                    <div className="w-36 h-36 bg-white rounded-xl p-2.5 mb-3 flex items-center justify-center border border-white/10 overflow-hidden">
                         <QRCode
                             value={JSON.stringify({
                                 id: ticket.id,
@@ -184,22 +180,22 @@ function TicketCard({
                     <div className="flex gap-3 w-full px-2">
                         <button
                             onClick={handleTransfer}
-                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/10 hover:bg-white/20 transition-colors text-white text-sm font-medium"
+                            className="flex-1 btn-secondary py-2.5 text-sm"
                         >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-4 h-4 inline-block mr-1.5" />
                             Transfer
                         </button>
                         {ticket.listing_status === 'active' ? (
                             <button
                                 onClick={handleCancel}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 transition-colors text-zinc-300 text-sm font-medium"
+                                className="flex-1 py-2.5 rounded-lg bg-[#242424] hover:bg-[#2A2A2A] transition-colors text-white text-sm font-medium"
                             >
                                 Cancel
                             </button>
                         ) : (
                             <button
                                 onClick={handleSell}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 transition-colors text-red-300 text-sm font-medium"
+                                className="flex-1 py-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 text-sm font-medium flex items-center justify-center gap-1.5"
                             >
                                 <Banknote className="w-4 h-4" />
                                 Sell
@@ -209,13 +205,9 @@ function TicketCard({
 
                     {/* Tap Hint */}
                     <div className="absolute bottom-3">
-                        <motion.span
-                            className="text-xs text-white/40"
-                            animate={{ opacity: [0.4, 0.8, 0.4] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                        >
+                        <span className="text-xs text-white/30">
                             Tap to flip back
-                        </motion.span>
+                        </span>
                     </div>
                 </div>
             }
@@ -230,9 +222,9 @@ function LoadingState() {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             >
-                <Loader2 className="w-8 h-8 text-purple-400" />
+                <Loader2 className="w-8 h-8 text-white" />
             </motion.div>
-            <p className="text-white/50 mt-4">Loading your tickets...</p>
+            <p className="text-white/40 mt-4">Loading your tickets...</p>
         </div>
     );
 }
@@ -240,20 +232,20 @@ function LoadingState() {
 function EmptyState() {
     return (
         <motion.div
-            className="glass-card p-12 text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
+            className="card p-12 text-center max-w-md mx-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
         >
-            <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                <Ticket className="w-10 h-10 text-purple-400" />
+            <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 text-white/40">
+                <Ticket className="w-8 h-8" />
             </div>
             <h3 className="heading text-xl text-white mb-2">No Tickets Yet</h3>
-            <p className="text-white/50 text-sm mb-6">
+            <p className="text-white/40 text-sm mb-6">
                 Your NFT tickets will appear here after purchase.
             </p>
             <a
                 href="/"
-                className="inline-block px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                className="btn-primary"
             >
                 Browse Events
             </a>
@@ -264,20 +256,20 @@ function EmptyState() {
 function SignInPrompt({ onSignIn }: { onSignIn: () => void }) {
     return (
         <motion.div
-            className="glass-card p-12 text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
+            className="card p-12 text-center max-w-md mx-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
         >
-            <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                <Ticket className="w-10 h-10 text-purple-400" />
+            <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 text-white/40">
+                <Ticket className="w-8 h-8" />
             </div>
             <h3 className="heading text-xl text-white mb-2">Sign In Required</h3>
-            <p className="text-white/50 text-sm mb-6">
+            <p className="text-white/40 text-sm mb-6">
                 Connect your wallet to view your tickets.
             </p>
             <button
                 onClick={onSignIn}
-                className="inline-block px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                className="btn-primary"
             >
                 Sign In
             </button>
@@ -406,16 +398,16 @@ export default function TicketsPage() {
             {/* Resale Listing Modal */}
             <AnimatePresence>
                 {sellingTicket && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl p-6 relative overflow-hidden"
+                            exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                            className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-6 relative overflow-hidden"
                         >
                             <button
                                 onClick={() => setSellingTicket(null)}
-                                className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+                                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -425,7 +417,7 @@ export default function TicketsPage() {
                                 List your ticket for sale on the secondary marketplace. Price-capped rules apply.
                             </p>
 
-                            <div className="p-4 bg-white/5 rounded-2xl mb-6 border border-white/5 space-y-2">
+                            <div className="p-4 bg-white/5 rounded-xl mb-6 border border-white/5 space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-neutral-400">Event</span>
                                     <span className="text-white font-medium line-clamp-1 max-w-[200px]">
@@ -440,7 +432,7 @@ export default function TicketsPage() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-neutral-400">Max Resale Price</span>
-                                    <span className="text-purple-400 font-semibold">
+                                    <span className="text-white font-semibold">
                                         ${((sellingTicket.event?.price_usd || 0) * 2).toFixed(2)} USDC
                                     </span>
                                 </div>
@@ -448,7 +440,7 @@ export default function TicketsPage() {
 
                             <form onSubmit={handleConfirmSell} className="space-y-4">
                                 <div className="space-y-2">
-                                    <label htmlFor="price" className="text-xs text-neutral-400 font-medium">
+                                    <label htmlFor="price" className="text-xs text-neutral-400 font-medium ml-1">
                                         Resale Price (USDC)
                                     </label>
                                     <input
@@ -458,7 +450,7 @@ export default function TicketsPage() {
                                         placeholder="0.00"
                                         value={resalePrice}
                                         onChange={(e) => setResalePrice(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500 transition-colors"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/20 transition-colors"
                                         disabled={isSubmitting}
                                         required
                                     />
@@ -471,7 +463,7 @@ export default function TicketsPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full py-4 rounded-2xl bg-purple-500 hover:bg-purple-600 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="w-full btn-primary py-3 flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {isSubmitting ? (
                                         <>

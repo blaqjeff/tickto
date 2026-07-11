@@ -85,23 +85,17 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#FF3BFF]/20 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#5C24FF]/20 blur-[120px] rounded-full" />
-            </div>
-
             <div className="relative z-10 w-full max-w-2xl mx-auto">
                 <div className="text-center mb-12">
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
+                        initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mb-6 backdrop-blur-md"
+                        className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-white/5 border border-white/10 mb-6"
                     >
                         <Ticket className="w-8 h-8 text-white" />
                     </motion.div>
                     <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
                         className="text-4xl md:text-5xl font-semibold tracking-tight mb-4"
@@ -109,12 +103,12 @@ export default function OnboardingPage() {
                         Welcome to Tickto
                     </motion.h1>
                     <motion.p
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                         className="text-neutral-400 text-lg max-w-lg mx-auto"
                     >
-                        {step === 1 ? "How are you planning to use Tickto primary?" : "Let's set up your profile."}
+                        {step === 1 ? "How are you planning to use Tickto?" : "Let's set up your profile."}
                     </motion.p>
                 </div>
 
@@ -122,24 +116,23 @@ export default function OnboardingPage() {
                     {step === 1 && (
                         <motion.div
                             key="step1"
-                            initial={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, x: -15 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            exit={{ opacity: 0, x: -15 }}
                             className="grid md:grid-cols-2 gap-4"
                         >
                             {/* Fan Card */}
                             <button
                                 onClick={() => handleRoleSelect('fan')}
                                 className={clsx(
-                                    "text-left p-6 md:p-8 rounded-3xl border transition-all duration-300 group relative overflow-hidden",
+                                    "text-left p-6 md:p-8 rounded-xl border transition-all duration-200 group relative overflow-hidden",
                                     role === 'fan'
-                                        ? "bg-white/10 border-white"
-                                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                                        ? "bg-white/5 border-white"
+                                        : "bg-white/3 border-white/10 hover:bg-white/5 hover:border-white/20"
                                 )}
                             >
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF3BFF]/10 blur-3xl group-hover:bg-[#FF3BFF]/20 transition-all" />
                                 <div className="relative z-10">
-                                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-6">
+                                    <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6">
                                         <Ticket className="w-6 h-6 text-white" />
                                     </div>
                                     <h3 className="text-xl font-medium mb-2">I&apos;m a Fan</h3>
@@ -153,15 +146,14 @@ export default function OnboardingPage() {
                             <button
                                 onClick={() => handleRoleSelect('organizer')}
                                 className={clsx(
-                                    "text-left p-6 md:p-8 rounded-3xl border transition-all duration-300 group relative overflow-hidden",
+                                    "text-left p-6 md:p-8 rounded-xl border transition-all duration-200 group relative overflow-hidden",
                                     role === 'organizer'
-                                        ? "bg-white/10 border-white"
-                                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                                        ? "bg-white/5 border-white"
+                                        : "bg-white/3 border-white/10 hover:bg-white/5 hover:border-white/20"
                                 )}
                             >
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#5C24FF]/10 blur-3xl group-hover:bg-[#5C24FF]/20 transition-all" />
                                 <div className="relative z-10">
-                                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-6">
+                                    <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6">
                                         <Mic2 className="w-6 h-6 text-white" />
                                     </div>
                                     <h3 className="text-xl font-medium mb-2">I&apos;m an Organizer</h3>
@@ -176,10 +168,10 @@ export default function OnboardingPage() {
                     {step === 2 && (
                         <motion.div
                             key="step2"
-                            initial={{ opacity: 0, x: 20 }}
+                            initial={{ opacity: 0, x: 15 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            className="bg-white/5 border border-white/10 p-6 md:p-8 rounded-3xl backdrop-blur-sm"
+                            exit={{ opacity: 0, x: 15 }}
+                            className="bg-[#121212] border border-white/10 p-6 md:p-8 rounded-xl"
                         >
                             <div className="flex items-center gap-3 mb-8">
                                 <button
@@ -212,7 +204,7 @@ export default function OnboardingPage() {
                                             autoComplete="off"
                                             spellCheck="false"
                                             disabled={isSubmitting}
-                                            className="w-full bg-black/50 border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-white placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all font-medium disabled:opacity-50"
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white placeholder-neutral-600 focus:outline-none focus:border-white/20 transition-all font-medium disabled:opacity-50"
                                         />
                                     </div>
                                     <p className="text-neutral-500 text-xs mt-2 ml-1">
@@ -229,7 +221,7 @@ export default function OnboardingPage() {
                                 <button
                                     type="submit"
                                     disabled={!username || username.length < 3 || isSubmitting}
-                                    className="w-full bg-white text-black font-medium py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full btn-primary py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting ? (
                                         <Loader2 className="w-5 h-5 animate-spin" />

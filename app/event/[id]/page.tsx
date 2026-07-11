@@ -347,42 +347,42 @@ export default function EventPage({ params }: EventPageProps) {
                 {/* Content */}
                 <motion.div
                     className="px-4 -mt-20 relative z-10"
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.4 }}
                 >
                     {/* Main Info Card */}
-                    <div className="glass-card p-6 mb-4">
+                    <div className="card p-6 mb-4">
                         <h1 className="heading text-2xl text-white mb-4">{event.title}</h1>
 
                         <div className="space-y-3 mb-6">
-                            <div className="flex items-center gap-3 text-white/70">
-                                <Calendar className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                            <div className="flex items-center gap-3 text-white/60">
+                                <Calendar className="w-5 h-5 text-white/40 flex-shrink-0" />
                                 <span>
                                     {formatDate(event.date)} at {formatTime(event.date || event.time)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-3 text-white/70">
-                                <MapPin className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                            <div className="flex items-center gap-3 text-white/60">
+                                <MapPin className="w-5 h-5 text-white/40 flex-shrink-0" />
                                 <div>
                                     <div className="font-medium text-white">{event.location || event.venue || 'Location TBA'}</div>
                                     {event.location && event.venue && event.location !== event.venue && (
-                                        <div className="text-sm text-white/50">{event.venue}</div>
+                                        <div className="text-sm text-white/40">{event.venue}</div>
                                     )}
                                 </div>
                             </div>
                         </div>
 
                         {event.description && (
-                            <p className="text-white/60 text-sm leading-relaxed">{event.description}</p>
+                            <p className="text-white/50 text-sm leading-relaxed">{event.description}</p>
                         )}
                     </div>
 
                     {/* Ticket Tier Selection */}
-                    <div className="glass-card p-6 mb-4">
+                    <div className="card p-6 mb-4">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="heading text-lg text-white">Select Tickets</h2>
-                            <span className="text-xs text-white/50">{totalQuantity}/5 Max</span>
+                            <span className="text-xs text-white/40">{totalQuantity}/5 Max</span>
                         </div>
 
                         <div className="space-y-4">
@@ -390,20 +390,20 @@ export default function EventPage({ params }: EventPageProps) {
                                 <div
                                     key={tier.id}
                                     className={cn(
-                                        "w-full p-4 rounded-2xl border transition-all flex flex-col gap-3",
+                                        "w-full p-4 rounded-xl border transition-all flex flex-col gap-3",
                                         (tierQuantities[tier.id] || 0) > 0
-                                            ? "border-purple-500/50 bg-purple-500/5"
-                                            : "border-white/10 bg-white/5"
+                                            ? "border-white bg-white/5"
+                                            : "border-white/5 bg-[#161616]/30"
                                     )}
                                 >
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <h3 className="font-medium text-white">{tier.name}</h3>
                                             {tier.description && (
-                                                <p className="text-xs text-white/50 mt-1">{tier.description}</p>
+                                                <p className="text-xs text-white/40 mt-1">{tier.description}</p>
                                             )}
                                         </div>
-                                        <span className="mono text-lg text-purple-400 font-semibold shrink-0 ml-4">
+                                        <span className="mono text-lg text-white font-medium shrink-0 ml-4">
                                             {formatUSD(tier.price)}
                                         </span>
                                     </div>
@@ -413,9 +413,9 @@ export default function EventPage({ params }: EventPageProps) {
                                             onClick={() => decreaseQuantity(tier.id)}
                                             disabled={!(tierQuantities[tier.id] > 0)}
                                             className={cn(
-                                                'w-8 h-8 rounded-full flex items-center justify-center transition-all',
+                                                'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
                                                 !(tierQuantities[tier.id] > 0)
-                                                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                                    ? 'bg-white/5 text-white/20 cursor-not-allowed'
                                                     : 'bg-white/10 text-white hover:bg-white/20'
                                             )}
                                         >
@@ -430,9 +430,9 @@ export default function EventPage({ params }: EventPageProps) {
                                             onClick={() => increaseQuantity(tier.id)}
                                             disabled={totalQuantity >= 5}
                                             className={cn(
-                                                'w-8 h-8 rounded-full flex items-center justify-center transition-all',
+                                                'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
                                                 totalQuantity >= 5
-                                                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                                    ? 'bg-white/5 text-white/20 cursor-not-allowed'
                                                     : 'bg-white/10 text-white hover:bg-white/20'
                                             )}
                                         >
@@ -446,20 +446,20 @@ export default function EventPage({ params }: EventPageProps) {
 
                     {/* Order Summary */}
                     {totalQuantity > 0 && (
-                        <div className="glass-card p-6 mb-6">
+                        <div className="card p-6 mb-6">
                             <h2 className="heading text-lg text-white mb-4">Order Summary</h2>
                             <div className="space-y-2 mb-4">
                                 {tiers.filter(t => tierQuantities[t.id] > 0).map(tier => (
                                     <div key={tier.id} className="flex justify-between text-sm">
-                                        <span className="text-white/70">{tierQuantities[tier.id]}x {tier.name}</span>
-                                        <span className="mono text-white/90">{formatUSD(tier.price * tierQuantities[tier.id])}</span>
+                                        <span className="text-white/60">{tierQuantities[tier.id]}x {tier.name}</span>
+                                        <span className="mono text-white/80">{formatUSD(tier.price * tierQuantities[tier.id])}</span>
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex justify-between items-end border-t border-white/10 pt-4">
+                            <div className="flex justify-between items-end border-t border-white/5 pt-4">
                                 <span className="text-white font-medium">Total</span>
                                 <div className="text-right">
-                                    <p className="mono text-2xl text-purple-400 font-bold">
+                                    <p className="mono text-2xl text-white font-medium">
                                         {formatUSD(totalPrice)}
                                     </p>
                                     <p className="text-xs text-white/40 mt-0.5">
@@ -475,27 +475,27 @@ export default function EventPage({ params }: EventPageProps) {
                         {txState !== 'success' && (
                             <motion.div
                                 className="flex flex-col items-center gap-4 mb-8"
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
+                                exit={{ opacity: 0, y: -15 }}
                             >
                                 {/* Error Message */}
                                 {errorMessage && (
-                                    <div className="w-full p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
+                                    <div className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
                                         {errorMessage}
                                     </div>
                                 )}
 
                                 {/* Processing State */}
                                 {txState === 'processing' && (
-                                    <div className="w-full p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
+                                    <div className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white/80 text-sm text-center flex items-center justify-center gap-2">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         Waiting for wallet approval...
                                     </div>
                                 )}
 
                                 {txState === 'minting' && (
-                                    <div className="w-full p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm text-center flex items-center justify-center gap-2">
+                                    <div className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white/80 text-sm text-center flex items-center justify-center gap-2">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         Payment confirmed! Creating your ticket...
                                     </div>
@@ -504,7 +504,7 @@ export default function EventPage({ params }: EventPageProps) {
                                 {!authenticated ? (
                                     <button
                                         onClick={login}
-                                        className="w-full max-w-sm py-4 rounded-full bg-purple-500 hover:bg-purple-600 transition-colors text-white font-medium"
+                                        className="w-full max-w-sm btn-primary py-3.5 text-sm"
                                     >
                                         Sign In to Purchase
                                     </button>
@@ -519,24 +519,24 @@ export default function EventPage({ params }: EventPageProps) {
 
                         {txState === 'success' && (
                             <motion.div
-                                className="glass-card p-8 text-center mb-8"
-                                initial={{ opacity: 0, scale: 0.9 }}
+                                className="card p-8 text-center mb-8"
+                                initial={{ opacity: 0, scale: 0.98 }}
                                 animate={{ opacity: 1, scale: 1 }}
                             >
-                                <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                                    <Check className="w-10 h-10 text-emerald-400" />
+                                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                                    <Check className="w-8 h-8 text-emerald-400" />
                                 </div>
                                 <h3 className="heading text-xl text-white mb-2">
                                     {totalQuantity > 1 ? `${totalQuantity} Tickets Purchased!` : 'Ticket Purchased!'}
                                 </h3>
-                                <p className="text-white/60 text-sm mb-6">
+                                <p className="text-white/50 text-sm mb-6">
                                     Your {totalQuantity > 1 ? 'tickets have' : 'ticket has'} been added to your wallet.
                                 </p>
                                 <Link
                                     href="/tickets"
-                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors"
+                                    className="inline-flex items-center gap-2 btn-primary px-6 py-3 text-sm font-semibold"
                                 >
-                                    <Ticket className="w-5 h-5" />
+                                    <Ticket className="w-4 h-4" />
                                     View My Tickets
                                 </Link>
                             </motion.div>

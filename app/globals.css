@@ -1,25 +1,39 @@
 @import "tailwindcss";
 
-/* ===== Glass House Design System ===== */
+/* ===== Premium Minimalist Design System ===== */
 :root {
-  /* Core colors */
-  --background: #09090b;
-  /* zinc-950 */
-  --foreground: #fafafa;
+  /* Core background & text colors */
+  --background: #0A0A0A;
+  --foreground: #EFEEED;
 
-  /* Glass effects */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-blur: 40px;
+  /* Premium Solid Surfaces (layered elevations) */
+  --surface: #121212;
+  --surface-hover: #1A1A1A;
+  --surface-elevated: #242424;
 
-  /* Brand colors */
-  --primary: #c084fc;
-  /* purple-400 */
-  --primary-glow: rgba(192, 132, 252, 0.5);
-  --success: #34d399;
-  /* emerald-400 */
-  --destructive: #fb7185;
-  /* rose-400 */
+  /* Borders & Dividers */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.2);
+
+  /* Primary Accent & Functional colors (restrained, non-purple/neon) */
+  --accent: #FFFFFF;
+  --accent-foreground: #0A0A0A;
+  --accent-muted: #8A8A8A;
+  --accent-dark: #222222;
+
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.08);
+  --success-border: rgba(16, 185, 129, 0.2);
+
+  --destructive: #EF4444;
+  --destructive-bg: rgba(239, 68, 68, 0.08);
+  --destructive-border: rgba(239, 68, 68, 0.2);
+
+  /* Text Opacity Scale (Geist sans) */
+  --text-primary: #EFEEED;
+  --text-secondary: #8A8A8A;
+  --text-muted: #555555;
 }
 
 @theme inline {
@@ -28,13 +42,18 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Glass House tokens */
-  --color-glass-bg: var(--glass-bg);
-  --color-glass-border: var(--glass-border);
-  --color-primary: var(--primary);
-  --color-primary-glow: var(--primary-glow);
-  --color-success: var(--success);
-  --color-destructive: var(--destructive);
+  /* Premium custom Tailwind colors mapped to variables */
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border-subtle: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-border-strong: var(--border-strong);
+  
+  --color-accent: var(--accent);
+  --color-accent-muted: var(--accent-muted);
+  --color-success-bg: var(--success-bg);
+  --color-destructive-bg: var(--destructive-bg);
 }
 
 /* ===== Base Styles ===== */
@@ -42,22 +61,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
 }
 
-/* ===== Gradient Mesh Background ===== */
+/* ===== Disabled Gradient Mesh (renders nothing visually) ===== */
 .gradient-mesh {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.2;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 10%, #a855f7 0%, transparent 50%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, #ec4899 0%, transparent 50%),
-    radial-gradient(ellipse 70% 40% at 40% 80%, #3b82f6 0%, transparent 50%),
-    radial-gradient(ellipse 50% 50% at 90% 70%, #8b5cf6 0%, transparent 50%);
+  display: none !important;
 }
 
 /* ===== Top Navbar ===== */
@@ -66,39 +76,35 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(9, 9, 11, 0.8);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--glass-border);
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
   z-index: 50;
+  height: 64px;
 }
 
-/* ===== Glass Card Styles ===== */
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: 32px;
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* ===== Premium Solid Card Styles (replacing GlassCard) ===== */
+.glass-card, .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ===== Desktop Card Hover Enhancement ===== */
-.glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.glass-card-hover, .card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-card-hover:hover {
-  border-color: rgba(192, 132, 252, 0.3);
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 30px rgba(192, 132, 252, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+.glass-card-hover:hover, .card-hover:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* Ticket rip cutouts using clip-path */
+/* Ticket rip cutouts */
 .ticket-rip {
   --rip-size: 16px;
   position: relative;
@@ -114,23 +120,27 @@ body {
   border-radius: 50%;
   top: 50%;
   transform: translateY(-50%);
+  border: 1px solid var(--border);
+  z-index: 10;
 }
 
 .ticket-rip::before {
-  left: calc(var(--rip-size) / -2);
+  left: calc(var(--rip-size) / -2 - 0.5px);
+  clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
 }
 
 .ticket-rip::after {
-  right: calc(var(--rip-size) / -2);
+  right: calc(var(--rip-size) / -2 - 0.5px);
+  clip-path: polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%);
 }
 
-/* ===== 3D Card Flip ===== */
+/* ===== 3D Card Flip (preserved logic but simplified visuals) ===== */
 .flip-card {
   perspective: 1000px;
 }
 
 .flip-card-inner {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   transform-style: preserve-3d;
   position: relative;
 }
@@ -151,60 +161,69 @@ body {
   inset: 0;
 }
 
-/* ===== Swipe Button ===== */
+/* ===== Premium Swipe Button ===== */
 .swipe-track {
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
-  border: 1px solid var(--glass-border);
-  border-radius: 100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   overflow: hidden;
+  position: relative;
 }
 
 .swipe-handle {
-  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-  border-radius: 50%;
-  box-shadow: 0 0 20px var(--primary-glow);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ===== Animations ===== */
-@keyframes pulse-glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 20px var(--primary-glow);
-  }
-
-  50% {
-    box-shadow: 0 0 40px var(--primary-glow);
-  }
+/* ===== Interactive UI Elements ===== */
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 16px;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.btn-primary:hover {
+  opacity: 0.95;
+}
+.btn-primary:active {
+  transform: scale(0.98);
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+.btn-secondary {
+  background: var(--surface-hover);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 16px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.btn-secondary:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-hover);
+}
+.btn-secondary:active {
+  transform: scale(0.98);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.shimmer {
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+/* Focus states */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--border-strong) !important;
 }
 
 /* ===== Typography Utilities ===== */
 .heading {
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .mono {

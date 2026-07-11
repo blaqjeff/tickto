@@ -10,6 +10,8 @@ import bs58 from 'bs58';
 import { BN } from '@coral-xyz/anchor';
 import { TicktoClient } from '@/lib/tickto-program';
 
+export const dynamic = 'force-dynamic';
+
 // --- Constants ---
 const USDC_DECIMALS = 6;
 const GAS_REIMBURSEMENT_USDC = 0.02; // Fee to cover relayer SOL gas
