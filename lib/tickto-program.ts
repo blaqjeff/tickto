@@ -15,7 +15,7 @@ import TICKTO_IDL from "./idl/tickto_tickets.json";
 export const PROGRAM_ID = new PublicKey("Fqqoja5BG9g4mY1mocc8YErH4kdgtzHnM1CrJVzQ5PZZ");
 
 export class TicktoClient {
-    program: Program<TicktoTickets>;
+    program: any;
     connection: Connection;
 
     constructor(
@@ -31,7 +31,7 @@ export class TicktoClient {
             AnchorProvider.defaultOptions()
         );
 
-        this.program = new Program(TICKTO_IDL as TicktoTickets, provider);
+        this.program = new Program(TICKTO_IDL as any, provider);
     }
 
     /**
@@ -65,18 +65,22 @@ export class TicktoClient {
         eventId: string,
         eventName: string,
         metadataUri: string,
-        ticketPriceLamports: BN,
+        ticketPriceUsdc: BN,
+        maxResaleMultiplierBps: number,
+        royaltyBps: number,
         maxSupply: number,
         merkleTree: PublicKey
     ) {
         const safeEventId = eventId.replace(/-/g, '').substring(0, 32);
 
         return await this.program.methods
-            .createEvent(
+            .create_event(
                 safeEventId,
                 eventName,
                 metadataUri,
-                ticketPriceLamports,
+                ticketPriceUsdc,
+                maxResaleMultiplierBps,
+                royaltyBps,
                 maxSupply
             )
             .accounts({
@@ -111,7 +115,7 @@ export class TicktoClient {
         );
 
         return await this.program.methods
-            .mintTicket(safeEventId)
+            .mint_ticket(safeEventId)
             .accounts({
                 buyer,
                 backendAuthority,
@@ -156,7 +160,7 @@ export class TicktoClient {
         );
 
         return await this.program.methods
-            .burnTicket(
+            .burn_ticket(
                 root,
                 dataHash,
                 creatorHash,
@@ -168,6 +172,73 @@ export class TicktoClient {
                 payer,
                 treeConfig,
                 merkleTree,
+                bubblegumProgram: BUBBLEGUM_PROGRAM_ID,
+                compressionProgram: COMPRESSION_PROGRAM_ID,
+                logWrapper: NOOP_PROGRAM_ID,
+            })
+            .remainingAccounts(
+                proofKeys.map((pubkey) => ({
+                    pubkey,
+                    isSigner: false,
+                    isWritable: false,
+                }))
+            )
+            .instruction();
+    }
+
+    /**
+     * Creates an instruction to resell/transfer a ticket.
+     */
+    async createResellTicketIx(
+        buyer: PublicKey,
+        seller: PublicKey,
+        organizer: PublicKey,
+        eventId: string,
+        merkleTree: PublicKey,
+        backendAuthority: PublicKey,
+        buyerAta: PublicKey,
+        sellerAta: PublicKey,
+        organizerAta: PublicKey,
+        root: number[],
+        dataHash: number[],
+        creatorHash: number[],
+        nonce: BN,
+        index: number,
+        salePriceUsdc: BN,
+        proofKeys: PublicKey[]
+    ) {
+        const safeEventId = eventId.replace(/-/g, '').substring(0, 32);
+
+        const BUBBLEGUM_PROGRAM_ID = new PublicKey("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
+        const COMPRESSION_PROGRAM_ID = new PublicKey("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK");
+        const NOOP_PROGRAM_ID = new PublicKey("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV");
+        const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+
+        const [treeConfig] = PublicKey.findProgramAddressSync(
+            [merkleTree.toBuffer()],
+            BUBBLEGUM_PROGRAM_ID
+        );
+
+        return await this.program.methods
+            .resell_ticket(
+                root,
+                dataHash,
+                creatorHash,
+                nonce,
+                index,
+                salePriceUsdc
+            )
+            .accounts({
+                buyer,
+                seller,
+                organizer,
+                backendAuthority,
+                treeConfig,
+                merkleTree,
+                buyerTokenAccount: buyerAta,
+                sellerTokenAccount: sellerAta,
+                organizerTokenAccount: organizerAta,
+                tokenProgram: TOKEN_PROGRAM_ID,
                 bubblegumProgram: BUBBLEGUM_PROGRAM_ID,
                 compressionProgram: COMPRESSION_PROGRAM_ID,
                 logWrapper: NOOP_PROGRAM_ID,

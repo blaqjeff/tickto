@@ -315,3 +315,68 @@ export async function buyTicket(
         return { success: false, error: 'An unexpected error occurred' };
     }
 }
+
+/**
+ * List a ticket for sale
+ */
+export async function listTicketForSale(ticketId: string, priceUsd: number) {
+    const { data, error } = await supabase
+        .from('tickets')
+        .update({
+            listing_price_usd: priceUsd,
+            listing_status: 'active'
+        })
+        .eq('id', ticketId)
+        .select();
+
+    if (error) {
+        console.error('Error listing ticket:', error);
+        return null;
+    }
+    return data;
+}
+
+/**
+ * Cancel a ticket listing
+ */
+export async function cancelTicketListing(ticketId: string) {
+    const { data, error } = await supabase
+        .from('tickets')
+        .update({
+            listing_price_usd: null,
+            listing_status: null
+        })
+        .eq('id', ticketId)
+        .select();
+
+    if (error) {
+        console.error('Error cancelling listing:', error);
+        return null;
+    }
+    return data;
+}
+
+/**
+ * Get all active resale listings
+ */
+export async function getActiveListings() {
+    const { data, error } = await supabase
+        .from('tickets')
+        .select(`
+            *,
+            events ( * )
+        `)
+        .eq('listing_status', 'active')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching active listings:', error);
+        return [];
+    }
+
+    return (data || []).map((ticket: any) => ({
+        ...ticket,
+        event: ticket.events
+    }));
+}
+

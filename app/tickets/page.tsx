@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'react-qr-code';
-import { Calendar, MapPin, QrCode, Ticket, Send, Banknote, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, QrCode, Ticket, Send, Banknote, Loader2, X } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { getUserTickets } from '@/lib/api';
+import { getUserTickets, listTicketForSale, cancelTicketListing } from '@/lib/api';
 import { formatDate, formatTime } from '@/lib/mock-data';
 
 // Simple ticket type for the new API response
@@ -21,6 +21,8 @@ interface TicketData {
     token_id?: string;
     status?: string;
     price_paid?: number;
+    listing_price_usd?: number;
+    listing_status?: string;
     event?: {
         id: string;
         title: string;
@@ -30,6 +32,7 @@ interface TicketData {
         location?: string;
         cover_image?: string;
         image_url?: string;
+        price_usd?: number;
     };
 }
 
@@ -46,7 +49,15 @@ const item = {
     show: { opacity: 1, y: 0 },
 };
 
-function TicketCard({ ticket }: { ticket: TicketData }) {
+function TicketCard({ 
+    ticket, 
+    onSell, 
+    onCancel 
+}: { 
+    ticket: TicketData; 
+    onSell: (t: TicketData) => void;
+    onCancel: (t: TicketData) => void;
+}) {
     const handleTransfer = (e: React.MouseEvent) => {
         e.stopPropagation();
         alert(`Transfer ticket ${ticket.id} - Coming soon!`);
@@ -54,7 +65,12 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
 
     const handleSell = (e: React.MouseEvent) => {
         e.stopPropagation();
-        alert(`Sell ticket ${ticket.id} - Coming soon!`);
+        onSell(ticket);
+    };
+
+    const handleCancel = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onCancel(ticket);
     };
 
     // Safe access to event properties
@@ -88,9 +104,15 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
                         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 to-transparent" />
 
                         {/* Status Badge */}
-                        <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 backdrop-blur-md">
-                            {status.toUpperCase()}
-                        </div>
+                        {ticket.listing_status === 'active' ? (
+                            <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-md">
+                                LISTED · ${ticket.listing_price_usd} USDC
+                            </div>
+                        ) : (
+                            <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 backdrop-blur-md">
+                                {status.toUpperCase()}
+                            </div>
+                        )}
                     </div>
 
                     {/* Event Info */}
@@ -167,13 +189,22 @@ function TicketCard({ ticket }: { ticket: TicketData }) {
                             <Send className="w-4 h-4" />
                             Transfer
                         </button>
-                        <button
-                            onClick={handleSell}
-                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 transition-colors text-red-300 text-sm font-medium"
-                        >
-                            <Banknote className="w-4 h-4" />
-                            Sell
-                        </button>
+                        {ticket.listing_status === 'active' ? (
+                            <button
+                                onClick={handleCancel}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 transition-colors text-zinc-300 text-sm font-medium"
+                            >
+                                Cancel
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSell}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 transition-colors text-red-300 text-sm font-medium"
+                            >
+                                <Banknote className="w-4 h-4" />
+                                Sell
+                            </button>
+                        )}
                     </div>
 
                     {/* Tap Hint */}
@@ -258,30 +289,78 @@ export default function TicketsPage() {
     const { ready, authenticated, user, login } = usePrivy();
     const [tickets, setTickets] = useState<TicketData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [sellingTicket, setSellingTicket] = useState<TicketData | null>(null);
+    const [resalePrice, setResalePrice] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [modalError, setModalError] = useState<string | null>(null);
+
+    async function loadTickets() {
+        if (!authenticated || !user) {
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        const data = await getUserTickets(user.id);
+        setTickets(data as TicketData[]);
+        setLoading(false);
+    }
 
     useEffect(() => {
-        async function loadTickets() {
-            console.log('👤 FRONTEND: Privy ready:', ready, 'authenticated:', authenticated);
-            console.log('👤 FRONTEND: Current Privy User ID:', user?.id);
-
-            if (!authenticated || !user) {
-                console.log('👤 FRONTEND: Not authenticated, skipping ticket fetch');
-                setLoading(false);
-                return;
-            }
-
-            setLoading(true);
-            console.log('👤 FRONTEND: Calling getUserTickets with ID:', user.id);
-            const data = await getUserTickets(user.id);
-            console.log('👤 FRONTEND: Received tickets:', data);
-            setTickets(data as TicketData[]);
-            setLoading(false);
-        }
-
         if (ready) {
             loadTickets();
         }
     }, [ready, authenticated, user]);
+
+    const handleOpenSell = (ticket: TicketData) => {
+        setSellingTicket(ticket);
+        setResalePrice('');
+        setModalError(null);
+    };
+
+    const handleCancelListing = async (ticket: TicketData) => {
+        if (!confirm('Are you sure you want to cancel this listing?')) return;
+        setLoading(true);
+        try {
+            await cancelTicketListing(ticket.id);
+            await loadTickets();
+        } catch (err: any) {
+            console.error('Error cancelling listing:', err);
+            alert('Failed to cancel listing');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleConfirmSell = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!sellingTicket) return;
+        setModalError(null);
+
+        const price = parseFloat(resalePrice);
+        if (isNaN(price) || price <= 0) {
+            setModalError('Please enter a valid price');
+            return;
+        }
+
+        const faceValue = sellingTicket.event?.price_usd || 0;
+        const maxResalePrice = faceValue * 2;
+        if (price > maxResalePrice) {
+            setModalError(`Price cannot exceed the cap of $${maxResalePrice.toFixed(2)} (+100% of face value)`);
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await listTicketForSale(sellingTicket.id, price);
+            setSellingTicket(null);
+            await loadTickets();
+        } catch (err: any) {
+            console.error('Error listing ticket:', err);
+            setModalError('Failed to list ticket for sale');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto">
@@ -312,13 +391,102 @@ export default function TicketsPage() {
                 >
                     {tickets.map((ticket) => (
                         <motion.div key={ticket.id} variants={item}>
-                            <TicketCard ticket={ticket} />
+                            <TicketCard 
+                                ticket={ticket} 
+                                onSell={handleOpenSell}
+                                onCancel={handleCancelListing}
+                            />
                         </motion.div>
                     ))}
                 </motion.div>
             ) : (
                 <EmptyState />
             )}
+
+            {/* Resale Listing Modal */}
+            <AnimatePresence>
+                {sellingTicket && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl p-6 relative overflow-hidden"
+                        >
+                            <button
+                                onClick={() => setSellingTicket(null)}
+                                className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <h3 className="heading text-xl text-white mb-2">Resell Ticket</h3>
+                            <p className="text-sm text-neutral-400 mb-6">
+                                List your ticket for sale on the secondary marketplace. Price-capped rules apply.
+                            </p>
+
+                            <div className="p-4 bg-white/5 rounded-2xl mb-6 border border-white/5 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-neutral-400">Event</span>
+                                    <span className="text-white font-medium line-clamp-1 max-w-[200px]">
+                                        {sellingTicket.event?.title}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-neutral-400">Face Value</span>
+                                    <span className="text-white font-medium">
+                                        ${(sellingTicket.event?.price_usd || 0).toFixed(2)} USDC
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-neutral-400">Max Resale Price</span>
+                                    <span className="text-purple-400 font-semibold">
+                                        ${((sellingTicket.event?.price_usd || 0) * 2).toFixed(2)} USDC
+                                    </span>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleConfirmSell} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label htmlFor="price" className="text-xs text-neutral-400 font-medium">
+                                        Resale Price (USDC)
+                                    </label>
+                                    <input
+                                        id="price"
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        value={resalePrice}
+                                        onChange={(e) => setResalePrice(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500 transition-colors"
+                                        disabled={isSubmitting}
+                                        required
+                                    />
+                                </div>
+
+                                {modalError && (
+                                    <p className="text-sm text-red-400">{modalError}</p>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full py-4 rounded-2xl bg-purple-500 hover:bg-purple-600 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Listing...
+                                        </>
+                                    ) : (
+                                        'List Ticket'
+                                    )}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

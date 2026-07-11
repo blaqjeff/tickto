@@ -174,8 +174,16 @@
           "type": "string"
         },
         {
-          "name": "_ticket_price_lamports",
+          "name": "ticket_price_usdc",
           "type": "u64"
+        },
+        {
+          "name": "max_resale_multiplier_bps",
+          "type": "u16"
+        },
+        {
+          "name": "royalty_bps",
+          "type": "u16"
         },
         {
           "name": "max_supply",
@@ -203,9 +211,6 @@
         },
         {
           "name": "backend_authority",
-          "docs": [
-            "The backend relayer that co-signs to authorize minting (prevents free ticket exploits)"
-          ],
           "writable": true,
           "signer": true
         },
@@ -289,6 +294,166 @@
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "resell_ticket",
+      "discriminator": [
+        129,
+        5,
+        148,
+        113,
+        63,
+        25,
+        240,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "seller",
+          "writable": true
+        },
+        {
+          "name": "organizer",
+          "writable": true,
+          "relations": [
+            "event_config"
+          ]
+        },
+        {
+          "name": "backend_authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "event_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  118,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "event_config.event_id",
+                "account": "EventConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "master_tree_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  115,
+                  116,
+                  101,
+                  114,
+                  95,
+                  116,
+                  114,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "buyer_token_account",
+          "writable": true
+        },
+        {
+          "name": "seller_token_account",
+          "writable": true
+        },
+        {
+          "name": "organizer_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "bubblegum_program"
+        },
+        {
+          "name": "compression_program"
+        },
+        {
+          "name": "log_wrapper"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "data_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creator_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "sale_price_usdc",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -311,6 +476,16 @@
       "code": 6000,
       "name": "SoldOut",
       "msg": "Event sold out"
+    },
+    {
+      "code": 6001,
+      "name": "PriceCapExceeded",
+      "msg": "Resale price exceeds the face-value cap"
+    },
+    {
+      "code": 6002,
+      "name": "MathOverflow",
+      "msg": "Math calculation overflowed"
     }
   ],
   "types": [
@@ -342,6 +517,18 @@
           {
             "name": "tickets_minted",
             "type": "u32"
+          },
+          {
+            "name": "ticket_price_usdc",
+            "type": "u64"
+          },
+          {
+            "name": "max_resale_multiplier_bps",
+            "type": "u16"
+          },
+          {
+            "name": "royalty_bps",
+            "type": "u16"
           }
         ]
       }

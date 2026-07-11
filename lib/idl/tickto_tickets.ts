@@ -7,349 +7,56 @@
 export type TicktoTickets = {
   "address": "Fqqoja5BG9g4mY1mocc8YErH4kdgtzHnM1CrJVzQ5PZZ",
   "metadata": {
-    "name": "ticktoTickets",
+    "name": "tickto_tickets",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "cNFT ticketing program using Metaplex Bubblegum V2"
   },
   "instructions": [
     {
-      "name": "burnTicket",
-      "discriminator": [
-        31,
-        250,
-        96,
-        233,
-        181,
-        137,
-        195,
-        87
-      ],
-      "accounts": [
-        {
-          "name": "masterTreeAuthority",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  97,
-                  115,
-                  116,
-                  101,
-                  114,
-                  95,
-                  116,
-                  114,
-                  101,
-                  101
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "leafOwner"
-        },
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "treeConfig",
-          "writable": true
-        },
-        {
-          "name": "merkleTree",
-          "writable": true
-        },
-        {
-          "name": "bubblegumProgram"
-        },
-        {
-          "name": "compressionProgram"
-        },
-        {
-          "name": "logWrapper"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "root",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "dataHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "creatorHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u64"
-        },
-        {
-          "name": "index",
-          "type": "u32"
-        }
-      ]
+      "name": "burn_ticket",
+      "discriminator": number[],
+      "accounts": any[],
+      "args": any[]
     },
     {
-      "name": "createEvent",
-      "discriminator": [
-        49,
-        219,
-        29,
-        203,
-        22,
-        98,
-        100,
-        87
-      ],
-      "accounts": [
-        {
-          "name": "organizer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "eventConfig",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  118,
-                  101,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "eventId"
-              }
-            ]
-          }
-        },
-        {
-          "name": "merkleTree"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "eventId",
-          "type": "string"
-        },
-        {
-          "name": "eventName",
-          "type": "string"
-        },
-        {
-          "name": "metadataUri",
-          "type": "string"
-        },
-        {
-          "name": "ticketPriceLamports",
-          "type": "u64"
-        },
-        {
-          "name": "maxSupply",
-          "type": "u32"
-        }
-      ]
+      "name": "create_event",
+      "discriminator": number[],
+      "accounts": any[],
+      "args": any[]
     },
     {
-      "name": "mintTicket",
-      "discriminator": [
-        159,
-        167,
-        223,
-        60,
-        138,
-        6,
-        23,
-        29
-      ],
-      "accounts": [
-        {
-          "name": "buyer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "backendAuthority",
-          "docs": [
-            "The backend relayer that co-signs to authorize minting (prevents free ticket exploits)"
-          ],
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "organizer",
-          "writable": true
-        },
-        {
-          "name": "eventConfig",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  118,
-                  101,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "eventId"
-              }
-            ]
-          }
-        },
-        {
-          "name": "masterTreeAuthority",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  97,
-                  115,
-                  116,
-                  101,
-                  114,
-                  95,
-                  116,
-                  114,
-                  101,
-                  101
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "treeConfig",
-          "writable": true
-        },
-        {
-          "name": "merkleTree",
-          "writable": true
-        },
-        {
-          "name": "bubblegumProgram"
-        },
-        {
-          "name": "compressionProgram"
-        },
-        {
-          "name": "logWrapper"
-        },
-        {
-          "name": "mplCoreProgram"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "eventId",
-          "type": "string"
-        }
-      ]
+      "name": "mint_ticket",
+      "discriminator": number[],
+      "accounts": any[],
+      "args": any[]
+    },
+    {
+      "name": "resell_ticket",
+      "discriminator": number[],
+      "accounts": any[],
+      "args": any[]
     }
   ],
   "accounts": [
     {
-      "name": "eventConfig",
-      "discriminator": [
-        85,
-        63,
-        74,
-        243,
-        198,
-        192,
-        138,
-        0
-      ]
+      "name": "EventConfig",
+      "discriminator": number[]
     }
   ],
   "errors": [
     {
-      "code": 6000,
-      "name": "soldOut",
-      "msg": "Event sold out"
+      "code": number,
+      "name": string,
+      "msg": string
     }
   ],
   "types": [
     {
-      "name": "eventConfig",
+      "name": "EventConfig",
       "type": {
         "kind": "struct",
-        "fields": [
-          {
-            "name": "organizer",
-            "type": "pubkey"
-          },
-          {
-            "name": "eventId",
-            "type": "string"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "merkleTree",
-            "type": "pubkey"
-          },
-          {
-            "name": "maxSupply",
-            "type": "u32"
-          },
-          {
-            "name": "ticketsMinted",
-            "type": "u32"
-          }
-        ]
+        "fields": any[]
       }
     }
   ]

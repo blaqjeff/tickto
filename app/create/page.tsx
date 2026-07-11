@@ -201,7 +201,9 @@ export default function CreateEventPage() {
                     eventId, // String length limits apply in production
                     payload.title.substring(0, 32), // eventName
                     payload.image_url, // uri
-                    new BN(0), // ticketPriceLamports - Just tracking 0 for now in the contract config
+                    new BN(Math.floor(lowestPrice * 1_000_000)), // ticketPriceUsdc
+                    10000, // maxResaleMultiplierBps (+100% cap)
+                    500, // royaltyBps (5%)
                     totalTickets, // maxSupply
                     merkleTreePubKey // shared/event merkle tree
                 );
