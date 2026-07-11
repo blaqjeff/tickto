@@ -74,7 +74,7 @@ export class TicktoClient {
         const safeEventId = eventId.replace(/-/g, '').substring(0, 32);
 
         return await this.program.methods
-            .create_event(
+            .createEvent(
                 safeEventId,
                 eventName,
                 metadataUri,
@@ -115,7 +115,7 @@ export class TicktoClient {
         );
 
         return await this.program.methods
-            .mint_ticket(safeEventId)
+            .mintTicket(safeEventId)
             .accounts({
                 buyer,
                 backendAuthority,
@@ -160,7 +160,7 @@ export class TicktoClient {
         );
 
         return await this.program.methods
-            .burn_ticket(
+            .burnTicket(
                 root,
                 dataHash,
                 creatorHash,
@@ -220,7 +220,7 @@ export class TicktoClient {
         );
 
         return await this.program.methods
-            .resell_ticket(
+            .resellTicket(
                 root,
                 dataHash,
                 creatorHash,
