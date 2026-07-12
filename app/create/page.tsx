@@ -43,8 +43,8 @@ export default function CreateEventPage() {
         { name: 'General', price: '', quantity: '' }
     ]);
 
-    const [royaltyPercent, setRoyaltyPercent] = useState('5'); // Default to 5%
-    const [maxResaleMultiplier, setMaxResaleMultiplier] = useState('2.0'); // Default to 2.0x (100% premium cap)
+    const [royaltyPercent, setRoyaltyPercent] = useState(''); // Empty = no royalties (0%)
+    const [maxResaleMultiplier, setMaxResaleMultiplier] = useState(''); // Empty = no limit (unlimited)
 
     // Access Control
     useEffect(() => {
@@ -629,8 +629,7 @@ export default function CreateEventPage() {
                                     value={royaltyPercent}
                                     onChange={e => setRoyaltyPercent(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
-                                    placeholder="e.g. 5"
-                                    required
+                                    placeholder="No royalties (0%)"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -642,8 +641,7 @@ export default function CreateEventPage() {
                                     value={maxResaleMultiplier}
                                     onChange={e => setMaxResaleMultiplier(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
-                                    placeholder="e.g. 2.0"
-                                    required
+                                    placeholder="No resale limit (unlimited)"
                                 />
                             </div>
                         </div>

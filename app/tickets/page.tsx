@@ -336,9 +336,18 @@ export default function TicketsPage() {
         }
 
         const faceValue = sellingTicket.event?.price_usd || 0;
-        const maxResalePrice = faceValue * 2;
+        const multiplierBps = (sellingTicket.event as any)?.max_resale_multiplier_bps;
+
+        // If multiplierBps is u16::MAX (65535), there is no cap.
+        const hasPriceCap = multiplierBps !== undefined && multiplierBps !== 65535;
+        const maxResalePrice = hasPriceCap 
+            ? faceValue * (1 + (multiplierBps as number) / 10000)
+            : multiplierBps === undefined 
+                ? faceValue * 2 // Default legacy fallback
+                : Infinity; // Unlimited
+
         if (price > maxResalePrice) {
-            setModalError(`Price cannot exceed the cap of $${maxResalePrice.toFixed(2)} (+100% of face value)`);
+            setModalError(`Price cannot exceed the organizer's cap of $${maxResalePrice.toFixed(2)}`);
             return;
         }
 
@@ -434,7 +443,12 @@ export default function TicketsPage() {
                                 <div className="flex justify-between text-sm">
                                     <span className="text-neutral-400">Max Resale Price</span>
                                     <span className="text-white font-semibold">
-                                        ${((sellingTicket.event?.price_usd || 0) * 2).toFixed(2)} USDC
+                                        {(sellingTicket.event as any)?.max_resale_multiplier_bps === 65535
+                                            ? 'Unlimited'
+                                            : `$${(
+                                                (sellingTicket.event?.price_usd || 0) *
+                                                (1 + ((sellingTicket.event as any)?.max_resale_multiplier_bps ?? 10000) / 10000)
+                                            ).toFixed(2)} USDC`}
                                     </span>
                                 </div>
                             </div>

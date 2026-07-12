@@ -160,15 +160,17 @@ pub mod tickto_tickets {
     ) -> Result<()> {
         let event_config = &ctx.accounts.event_config;
 
-        // 1. Enforce price cap: sale_price <= face_value * (1 + max_resale_multiplier_bps / 10000)
-        let max_price = event_config.ticket_price_usdc
-            .checked_mul(10000 + event_config.max_resale_multiplier_bps as u64)
-            .ok_or(ErrorCode::MathOverflow)?
-            .checked_div(10000)
-            .ok_or(ErrorCode::MathOverflow)?;
+        // 1. Enforce price cap if max_resale_multiplier_bps is not u16::MAX (unlimited)
+        if event_config.max_resale_multiplier_bps != u16::MAX {
+            let max_price = event_config.ticket_price_usdc
+                .checked_mul(10000 + event_config.max_resale_multiplier_bps as u64)
+                .ok_or(ErrorCode::MathOverflow)?
+                .checked_div(10000)
+                .ok_or(ErrorCode::MathOverflow)?;
 
-        if sale_price_usdc > max_price {
-            return err!(ErrorCode::PriceCapExceeded);
+            if sale_price_usdc > max_price {
+                return err!(ErrorCode::PriceCapExceeded);
+            }
         }
 
         // 2. Calculate royalties
