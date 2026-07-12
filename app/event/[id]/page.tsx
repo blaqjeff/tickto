@@ -332,6 +332,7 @@ export default function EventPage({ params }: EventPageProps) {
                         className="object-cover"
                         sizes="100vw"
                         priority
+                        unoptimized
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20" />
 

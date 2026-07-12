@@ -100,6 +100,7 @@ function TicketCard({
                             fill
                             className="object-cover"
                             sizes="100vw"
+                            unoptimized
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
 

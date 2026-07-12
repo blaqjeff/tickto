@@ -43,6 +43,9 @@ export default function CreateEventPage() {
         { name: 'General', price: '', quantity: '' }
     ]);
 
+    const [royaltyPercent, setRoyaltyPercent] = useState('5'); // Default to 5%
+    const [maxResaleMultiplier, setMaxResaleMultiplier] = useState('2.0'); // Default to 2.0x (100% premium cap)
+
     // Access Control
     useEffect(() => {
         if (ready && !authenticated) {
@@ -149,6 +152,9 @@ export default function CreateEventPage() {
             const totalTickets = numericTiers.reduce((sum, t) => sum + t.quantity, 0);
             const lowestPrice = Math.min(...numericTiers.map(t => t.price));
 
+            const royaltyBps = Math.round(parseFloat(royaltyPercent) * 100);
+            const maxResaleMultiplierBps = Math.round((parseFloat(maxResaleMultiplier) - 1) * 10000);
+
             const payload = {
                 title: formData.title,
                 description: formData.description,
@@ -160,7 +166,9 @@ export default function CreateEventPage() {
                 owner_id: user.id,
                 organizer_wallet: organizerWallet,
                 ticket_tiers: numericTiers,
-                merkle_tree: "11111111111111111111111111111111"
+                merkle_tree: "11111111111111111111111111111111",
+                max_resale_multiplier_bps: maxResaleMultiplierBps >= 0 ? maxResaleMultiplierBps : 10000,
+                royalty_bps: royaltyBps >= 0 ? royaltyBps : 500
             };
 
             console.log("Submitting:", payload);
@@ -202,8 +210,8 @@ export default function CreateEventPage() {
                     payload.title.substring(0, 32), // eventName
                     payload.image_url, // uri
                     new BN(Math.floor(lowestPrice * 1_000_000)), // ticketPriceUsdc
-                    10000, // maxResaleMultiplierBps (+100% cap)
-                    500, // royaltyBps (5%)
+                    payload.max_resale_multiplier_bps, // maxResaleMultiplierBps
+                    payload.royalty_bps, // royaltyBps
                     totalTickets, // maxSupply
                     merkleTreePubKey // shared/event merkle tree
                 );
@@ -602,6 +610,42 @@ export default function CreateEventPage() {
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
+                        </div>
+                    </div>
+
+                    {/* Secondary Market Config */}
+                    <div className="space-y-4 md:col-span-2 pt-4 border-t border-white/5">
+                        <label className="text-sm text-white/50 font-medium ml-1 flex items-center gap-2">
+                            Secondary Market Settings
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs text-white/40 font-medium ml-1">Creator Royalties (%)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.1"
+                                    value={royaltyPercent}
+                                    onChange={e => setRoyaltyPercent(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                    placeholder="e.g. 5"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-white/40 font-medium ml-1">Max Resale Cap (multiplier, e.g. 2.0x)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    step="0.1"
+                                    value={maxResaleMultiplier}
+                                    onChange={e => setMaxResaleMultiplier(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                    placeholder="e.g. 2.0"
+                                    required
+                                />
+                            </div>
                         </div>
                     </div>
 

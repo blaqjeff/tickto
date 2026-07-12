@@ -62,6 +62,7 @@ function EventCard({ event }: { event: Event }) {
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            unoptimized
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
 
@@ -139,6 +140,7 @@ function ResaleCard({
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          unoptimized
         />
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
         
@@ -474,6 +476,7 @@ export default function HomePage() {
                         className="object-cover transition-transform duration-700 group-hover:scale-102"
                         sizes="100vw"
                         priority
+                        unoptimized
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
 
