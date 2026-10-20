@@ -20,7 +20,7 @@ interface EventAnalyticsPageProps {
 export default function EventAnalyticsPage({ params }: EventAnalyticsPageProps) {
     const { id } = use(params);
     const router = useRouter();
-    const { ready, user } = usePrivy();
+    const { ready, user, getAccessToken } = usePrivy();
 
     const [event, setEvent] = useState<Event | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -103,9 +103,13 @@ export default function EventAnalyticsPage({ params }: EventAnalyticsPageProps) 
         if (isGeneratingLink) return;
         setIsGeneratingLink(true);
         try {
+            const accessToken = await getAccessToken();
             const res = await fetch('/api/magic-link', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                },
                 body: JSON.stringify({ event_id: id })
             });
             const data = await res.json();
@@ -122,9 +126,13 @@ export default function EventAnalyticsPage({ params }: EventAnalyticsPageProps) 
     const revokeToken = async (token: string) => {
         if (!confirm("Are you sure you want to revoke this link? Anyone using it will immediately lose scanner access.")) return;
         try {
+            const accessToken = await getAccessToken();
             await fetch('/api/magic-link', {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                },
                 body: JSON.stringify({ token })
             });
             await fetchScannerTokens();

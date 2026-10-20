@@ -88,16 +88,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Ticket not found for this event' }, { status: 404 });
         }
 
-        // 3. Check ticket status
-        if (ticketData.status === 'used') {
-            return NextResponse.json({
-                error: 'ALREADY SCANNED',
-                message: 'This ticket has already been used.',
-                ticket: ticketData
-            }, { status: 409 }); // 409 Conflict
-        }
-
-        if (ticketData.status !== 'valid') {
+        if (ticketData.status !== 'valid' && ticketData.status !== 'used') {
             return NextResponse.json({
                 error: `INVALID TICKET (${ticketData.status})`,
                 message: 'This ticket is not valid for entry.',
@@ -105,26 +96,37 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
-        // 4. Mark ticket as used
-        const { error: updateError } = await supabaseAdmin
+        // Atomically mark used only if still valid (status = 'valid' is the used=false equivalent).
+        // Zero rows updated means another scan already won the race.
+        const { data: updatedTickets, error: updateError } = await supabaseAdmin
             .from('tickets')
             .update({ status: 'used' })
-            .eq('id', ticketData.id);
+            .eq('id', ticketData.id)
+            .eq('status', 'valid')
+            .select();
 
         if (updateError) {
             console.error("Ticket Update Error:", updateError);
             return NextResponse.json({ error: 'Failed to update ticket status' }, { status: 500 });
         }
 
-        // 5. Success
+        if (!updatedTickets || updatedTickets.length === 0) {
+            return NextResponse.json({
+                error: 'ALREADY SCANNED',
+                message: 'This ticket has already been used.',
+                ticket: { ...ticketData, status: 'used' }
+            }, { status: 409 });
+        }
+
         return NextResponse.json({
             success: true,
             message: 'TICKET VALID - ACCESS GRANTED',
-            ticket: ticketData
+            ticket: updatedTickets[0]
         }, { status: 200 });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error("Scan API Exception:", err);
-        return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+        const message = err instanceof Error ? err.message : 'Internal Server Error';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
