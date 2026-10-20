@@ -1,5 +1,7 @@
 # Tickto - On-Chain Digital Ticketing Platform on Solana
 
+Status: in active development.
+
 Tickto is a decentralized, mobile-first Web3 ticketing dApp built on Solana. It is designed to solve the critical issues plaguing the traditional live event industry—specifically bot-sweeping, secondary market ticket scalping, fake ticket fraud, and the lack of tools for organizers to reward their loyal attendees.
 
 Tickets are minted as **Compressed NFTs (cNFTs)** on Solana to ensure low-cost minting and absolute verification of authenticity, and they are burned on-chain once redeemed at the venue door.
